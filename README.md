@@ -1,2 +1,2 @@
 # Project-IntroAI
-Introduction to AI course final project
+Introduction to AI class final project
