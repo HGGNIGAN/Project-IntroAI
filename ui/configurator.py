@@ -210,6 +210,7 @@ class ConfiguratorUI:
 
                 row_canvas.grid(row=0, column=0, sticky="nsew")
                 row_scrollbar.grid(row=0, column=1, sticky="ns")
+                self._attach_mousewheel_scroll(row_canvas)
 
                 # Configure grid layout for col_frame
                 self.col_frame.grid_rowconfigure(0, weight=1)
@@ -258,6 +259,7 @@ class ConfiguratorUI:
 
                 col_canvas.grid(row=0, column=0, sticky="nsew")
                 col_scrollbar.grid(row=0, column=1, sticky="ns")
+                self._attach_mousewheel_scroll(col_canvas)
 
         def on_algorithm_change(self, event=None):
                 """Handle algorithm selection change."""
@@ -329,6 +331,25 @@ class ConfiguratorUI:
         def auto_save(self):
                 """Automatically save configuration to default file."""
                 self.config_manager.save_config()
+
+        def _attach_mousewheel_scroll(self, canvas):
+                """Wire the standard wheel/trackpad events to the given Canvas."""
+
+                def _on_mousewheel(event):
+                        if event.delta:
+                                canvas.yview_scroll(int(-event.delta / 120), "units")
+                        elif event.num == 4:
+                                canvas.yview_scroll(-1, "units")
+                        elif event.num == 5:
+                                canvas.yview_scroll(1, "units")
+
+                canvas.bind(
+                        "<Enter>",
+                        lambda e: canvas.bind_all("<MouseWheel>", _on_mousewheel),
+                )
+                canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
+                canvas.bind("<Button-4>", _on_mousewheel)
+                canvas.bind("<Button-5>", _on_mousewheel)
 
         def solve(self):
                 """Solve the puzzle with current configuration."""
