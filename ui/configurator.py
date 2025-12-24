@@ -1,6 +1,6 @@
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
-from .config_manager import ConfigManager
+from core import ConfigManager, PuzzleGenerator
 from algorithms import list_solvers, get_solver_info
 
 
@@ -132,6 +132,12 @@ class ConfiguratorUI:
                 # Fixed button frame at the bottom (always visible) - uses grid row 1
                 button_frame = ttk.Frame(main_container)
                 button_frame.grid(row=1, column=0, sticky="ew")
+
+                ttk.Button(
+                        button_frame,
+                        text="Generate Random",
+                        command=self.generate_random_puzzle,
+                ).pack(side="left", padx=5, pady=8)
 
                 ttk.Button(button_frame, text="Solve Puzzle", command=self.solve).pack(
                         side="left", padx=5, pady=8
@@ -351,6 +357,21 @@ class ConfiguratorUI:
                 canvas.bind("<Leave>", lambda e: canvas.unbind_all("<MouseWheel>"))
                 canvas.bind("<Button-4>", _on_mousewheel)
                 canvas.bind("<Button-5>", _on_mousewheel)
+
+        def generate_random_puzzle(self):
+                """Generate a random puzzle and populate the clues."""
+                width = self.width_var.get()
+                height = self.height_var.get()
+
+                # Generate the puzzle
+                self._loading = True
+                PuzzleGenerator.generate_random_puzzle(
+                        width, height, self.config_manager
+                )
+                self._loading = False
+
+                # Update UI
+                self.update_clue_entries()
 
         def solve(self):
                 """Solve the puzzle with current configuration."""
