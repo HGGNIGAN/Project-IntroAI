@@ -4,18 +4,35 @@ from pathlib import Path
 
 
 class ConfigManager:
-        """Manages nonogram puzzle configurations. Automatically save/load configurations"""
+        """Manages nonogram puzzle configurations. Automatically save/load configurations."""
 
         DEFAULT_CONFIG_FILE = "nonogram_config.json"
+        DEFAULT_WIDTH = 4
+        DEFAULT_HEIGHT = 4
 
         def __init__(self, config_file=None):
                 self.config_file = config_file or self.DEFAULT_CONFIG_FILE
                 self.config = {
-                        "width": 5,
-                        "height": 5,
+                        "width": self.DEFAULT_WIDTH,
+                        "height": self.DEFAULT_HEIGHT,
                         "rows": {},
                         "columns": {},
                 }
+                self.set_dimensions(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
+
+        def ensure_startup_config(self):
+                """Guarantee a config file exists, or else create a blank layout."""
+                config_path = Path(self.config_file)
+                if config_path.exists():
+                        return
+                self.config = {
+                        "width": self.DEFAULT_WIDTH,
+                        "height": self.DEFAULT_HEIGHT,
+                        "rows": {},
+                        "columns": {},
+                }
+                self.set_dimensions(self.DEFAULT_WIDTH, self.DEFAULT_HEIGHT)
+                self.save_config()
 
         def load_config(self, filepath=None):
                 """Load configuration from a JSON file."""

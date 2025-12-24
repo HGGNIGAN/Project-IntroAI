@@ -78,8 +78,8 @@ class NonogramSolverApp:
                         # Call the selected algorithm
                         solution = solver.solve(ruleset)
 
-                        # Display solution in the solution tab
-                        self.display_solution(solution)
+                        # Display solution in the solution tab with clues
+                        self.display_solution(solution, rows_dict, cols_dict)
 
                         # Switch to solution tab
                         self.notebook.select(1)
@@ -97,19 +97,23 @@ class NonogramSolverApp:
                                 text=f"Error: {str(e)}", foreground="red"
                         )
 
-        def display_solution(self, grid):
+        def display_solution(self, grid, row_clues=None, col_clues=None):
                 """
-                Display the solution grid.
+                Display the solution grid with clues.
 
                 Args:
                     grid: 2D list representing the solution
+                    row_clues: Optional dict of row clues
+                    col_clues: Optional dict of column clues
                 """
                 # Clear previous canvas
                 for widget in self.canvas_frame.winfo_children():
                         widget.destroy()
 
-                # Create canvas
-                canvas = create_canvas_from_grid(self.canvas_frame, grid)
+                # Create canvas with clues
+                canvas = create_canvas_from_grid(
+                        self.canvas_frame, grid, row_clues, col_clues
+                )
                 canvas.pack(side="left", fill="both", expand=True)
 
                 # Create info panel
