@@ -15,7 +15,17 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
 - Use **Width** spinbox to set number of columns (1-20)
 - Use **Height** spinbox to set number of rows (1-20)
 
-### Step 2: Enter Clues
+### Step 2: Generate Puzzle or Enter Clues
+
+**Option A: Generate Random Puzzle** (Recommended)
+
+1. Click **Generate Random**
+2. A random puzzle will be created automatically:
+   - All clues are generated from the pattern
+   - Grid is printed to terminal
+   - Config is updated
+
+**Option B: Enter Clues Manually**
 
 The **Row/Column Clues** section has two tabs:
 
@@ -56,10 +66,9 @@ Displays:
 
 ### Grid Display Details
 
-- Each cell: 30×30 pixels
+- Cell size: 30×30 pixels
 - Black = filled cell (1)
 - White = empty cell (0)
-- Gray borders = cell boundaries
 
 ## Working with Configuration Files
 
@@ -98,30 +107,42 @@ You can edit JSON files directly in a text editor:
 
 ## Example Workflow
 
+### Quick Start (Using Generate Random)
+
+1. **Launch**: `python main.py`
+2. **Configure**:
+   - Set Width: 6, Height: 6
+   - Click **Generate Random**
+   - Watch terminal output for generated grid and clues
+3. **Solve**: Click "Solve Puzzle"
+4. **View**: Check Solution tab for the result with clues displayed
+
+### Manual Configuration Workflow
+
 1. **Launch**: `python main.py`
 2. **Configure**:
    - Set Width: 5, Height: 5
-   - Row 0 clues: `1,1`
-   - Row 1 clues: `2`
-   - Row 2 clues: `3`
-   - Row 3 clues: `2`
-   - Row 4 clues: `1,1`
-   - (Set similar patterns for columns)
+   - Rows Tab → Enter clues for each row:
+     - Row 0: `1,1`
+     - Row 1: `2`
+     - Row 2: `3`
+     - Row 3: `2`
+     - Row 4: `1,1`
+   - Columns Tab → Enter similar patterns
 3. **Solve**: Click "Solve Puzzle"
 4. **View**: Check Solution tab for the result
 
 ## Troubleshooting
 
-### "Invalid input in Row X"
+### Invalid input errors
 
-- Make sure clues are comma-separated numbers
-- No spaces before/after numbers
-- Examples:
-  - Correct: `1,2,3`
-  - Incorrect: `1, 2, 3`
+- Make sure clues are comma-separated numbers with no spaces
+- Correct: `1,2,3`; Wrong: `1, 2, 3` or `1, 2 , 3`
+- Empty fields are valid (means no filled cells)
 
 ### Configuration won't load
 
-- Ensure JSON file is valid
+- The app auto-generates `nonogram_config.json` on first run
+- Ensure JSON file is valid format
 - Check that file has `.json` extension
-- Verify you have read permissions on the file
+- Verify you have read/write permissions on the file
