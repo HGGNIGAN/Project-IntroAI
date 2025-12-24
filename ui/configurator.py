@@ -17,12 +17,19 @@ class ConfiguratorUI:
                 """
                 self.parent = parent
                 self.callback = callback
+                self.cache_invalidate_callback = (
+                        None  # Callback to invalidate solution cache
+                )
                 self.config_manager = ConfigManager()
                 self.row_entries = {}
                 self.col_entries = {}
                 self._loading = False  # Flag to prevent auto-save during loading
                 self.setup_ui()
                 self.load_default_config()
+
+        def set_cache_invalidator(self, callback):
+                """Set callback to invalidate solution cache when config changes."""
+                self.cache_invalidate_callback = callback
 
         def setup_ui(self):
                 """Setup the configurator UI."""
@@ -293,6 +300,9 @@ class ConfiguratorUI:
                 self.config_manager.set_dimensions(width, height)
                 self.update_clue_entries()
                 self.auto_save()
+                # Invalidate cached solution when dimensions change
+                if self.cache_invalidate_callback:
+                        self.cache_invalidate_callback()
 
         def on_entry_change(self, index, is_row=True):
                 """Handle clue entry changes and auto-save."""
