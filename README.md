@@ -118,7 +118,3 @@ Example:
   - **algorithms/** contains puzzle solver implementations
   
 - **Adding Solvers**: Read [algorithms/README.md](algorithms/README.md) before adding or modifying solvers
-  - Implement solvers as classes inheriting from `NonogramSolver`
-  - Solver signature: `solve(self, ruleset)` returning 2D list
-  - Ruleset contains: `width`, `height`, `rows` (list of lists), `columns` (list of lists)
-  - Return format: 2D list shaped `height x width` with `0` (empty) or `1` (filled)
