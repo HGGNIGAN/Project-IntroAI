@@ -5,12 +5,13 @@ This project auto-discovers solver classes in the `algorithms` package. Follow t
 ## Implement the base interface
 
 - Inherit from `NonogramSolver` defined in `algorithms/base.py`.
-- Implement `solve(self, ruleset)` with the exact signature.
-- Use the ruleset structure:
-  - `width` (int)
-  - `height` (int)
-  - `rows` (list[list[int]]) — ordered by row index
-  - `columns` (list[list[int]]) — ordered by column index
+- Implement `_solve_internal(self)` - the base class handles initialization automatically.
+- Instance variables automatically available:
+  - `self.width` (int) - Puzzle width
+  - `self.height` (int) - Puzzle height
+  - `self.rows` (list[list[int]]) - Row clues, ordered by row index
+  - `self.columns` (list[list[int]]) - Column clues, ordered by column index
+  - `self.grid` (list[list[int]]) - 2D grid initialized with zeros (height × width)
 
 ### Minimal template
 
@@ -21,13 +22,16 @@ class MySolver(NonogramSolver):
         name = "My Solver"
         description = "One-line description of the approach."
 
-        def solve(self, ruleset):
-                width = ruleset["width"]
-                height = ruleset["height"]
-                rows = ruleset["rows"]
-                columns = ruleset["columns"]
-                # TODO: implement your algorithm and return a 2D grid of 0/1 values
-                return [[0 for _ in range(width)] for _ in range(height)]
+        def _solve_internal(self):
+                # Instance variables are ready to use:
+                # self.width, self.height, self.rows, self.columns, self.grid
+                
+                # TODO: implement your algorithm by modifying self.grid
+                for y in range(self.height):
+                        for x in range(self.width):
+                                self.grid[y][x] = 0  # your logic here
+                
+                return self.grid
 ```
 
 ## File placement
@@ -52,6 +56,7 @@ class MySolver(NonogramSolver):
 
 ## Gotchas
 
-- Do not change the `solve` signature.
-- Ensure `rows` and `columns` are treated as ordered lists (not dicts).
-- Avoid side effects on the `ruleset` dict; copy if you need to mutate.
+- Implement `_solve_internal()`, not `solve()` (the base class handles `solve()`).
+- Use `self.grid` directly - it's pre-initialized as a `height × width` grid of zeros.
+- Helper methods can access `self.width`, `self.rows`, etc. without parameter passing.
+- Always return `self.grid` (or a new grid) from `_solve_internal()`.
