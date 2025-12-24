@@ -143,6 +143,7 @@ class ConfiguratorUI:
 
         def load_default_config(self):
                 """Load the default config file on startup if it exists."""
+                self.config_manager.ensure_startup_config()
                 if self.config_manager.load_config():
                         width, height = self.config_manager.get_dimensions()
                         # Temporarily disable auto-save during loading

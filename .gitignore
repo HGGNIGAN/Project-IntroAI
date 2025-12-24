@@ -186,3 +186,4 @@ config/secrets.json
 uploads/
 temp/
 tmp/
+nonogram_config.json

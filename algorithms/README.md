@@ -2,7 +2,7 @@
 
 This project auto-discovers solver classes in the `algorithms` package. Follow these steps to add your own solver.
 
-## 1) Implement the base interface
+## Implement the base interface
 
 - Inherit from `NonogramSolver` defined in `algorithms/base.py`.
 - Implement `solve(self, ruleset)` with the exact signature.
@@ -30,27 +30,27 @@ class MySolver(NonogramSolver):
                 return [[0 for _ in range(width)] for _ in range(height)]
 ```
 
-## 2) File placement
+## File placement
 
 - Add your solver as a new script inside `algorithms/` (e.g., `my_solver.py`).
 - You may add helper scripts if they are reusable across algorithms; keep algorithm-specific logic in your solver file.
 
-## 3) Auto-discovery
+## Auto-discovery
 
 - No registration needed. Any non-abstract subclass of `NonogramSolver` is discovered automatically on app start.
 - The UI dropdown will list `solver_instance.name`.
 
-## 4) Return format
+## Return format
 
 - Return a 2D list of ints with shape `height x width`.
 - Cell values: `0` = white/empty, `1` = black/filled.
 
-## 5) Logging and testing
+## Logging and testing
 
 - Feel free to `print()` for debugging; output appears in the terminal.
 - Test by running the app and selecting your solver from the dropdown.
 
-## 6) Gotchas
+## Gotchas
 
 - Do not change the `solve` signature.
 - Ensure `rows` and `columns` are treated as ordered lists (not dicts).
