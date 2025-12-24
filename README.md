@@ -7,14 +7,16 @@ A graphical user interface for configuring and solving nonogram puzzles.
 ```
 Current directory
 ├── README.md                   # This file
-├── nonogram_config.json        # Example puzzle configuration
+├── QUICK_START.md              # Quick start guide
+│
 ├── main.py                     # Entry point
 ├── algorithms/                 # Algorithm implementations
-└── ui/
-    ├── __init__.py
+├── core/                       # Core business logic
+│   ├── config_manager.py       # Configuration management (save/load)
+│   └── puzzle_generator.py     # Random puzzle generation
+└── ui/                         # User interface components
     ├── app.py                  # Main application window
     ├── configurator.py         # Puzzle configuration UI
-    ├── config_manager.py       # Configuration management (save/load)
     └── display_nonogram.py     # Grid display functionality
     
 ```
@@ -31,6 +33,8 @@ This will launch the Nonogram Solver application with a graphical interface.
 
 #### Configure a Puzzle
 
+##### Configure Manually
+
 1. **Set Dimensions**: Use the spinboxes to set the puzzle width and height (1-20)
 2. **Enter Clues**:
    - Switch to the **Rows** tab to enter row clues
@@ -38,21 +42,31 @@ This will launch the Nonogram Solver application with a graphical interface.
    - Enter clues as comma-separated numbers (e.g., `1,2,3`)
    - Leave empty for rows/columns with no filled cells
 
-3. **Solve**:
-   - Click "Solve Puzzle" to generate a solution
-   - The application will switch to the Solution tab automatically
+##### Generate Random Puzzle
+
+Instead of manually entering clues:
+
+1. Set your desired **Dimensions**
+2. Click **Generate Random**:
+   - Creates a random puzzle with that dimension
+   - Automatically generates all row and column clues from the pattern
+
+#### Solve
+
+- Click "Solve Puzzle" to generate a solution
+- The application will switch to the Solution tab automatically
 
 #### View Solution
 
 The Solution tab displays:
 
-- Visual grid representation of the puzzle solution
-- Cell size: 50x50 pixels (white = 0, black = 1)
-- Solution info panel showing puzzle dimensions and filled cell count
+- **Visual Grid**: White squares (0) and black squares (1)
+- **Clue Cells**: Row clues on the left and column clues above the grid
+- **Solution Info**: Puzzle size and filled cell count
 
 ### Configuration File Format
 
-Puzzle configurations are stored as JSON files, and are saved/loaded automatically. Example:
+Puzzle configurations are stored in a JSON file (`nonogram_config.json`, automatically-generated), and are saved/loaded automatically. Example:
 
 ```json
 {
@@ -98,7 +112,13 @@ Example:
 
 ### Developer Notes
 
-- Read the algorithm guide at [algorithms/README.md](algorithms/README.md) before adding or modifying solvers.
-- Implement solvers as classes inheriting from `NonogramSolver` with the signature `solve(self, ruleset)`.
-- Ruleset shape passed into solvers: `width`, `height`, `rows` (list of lists), `columns` (list of lists).
-- Solvers must return a 2D list shaped `height x width` with cell values: `0` = white/empty, `1` = black/filled.
+- **Directory Organization**:
+  - **core/** contains business logic (`ConfigManager`, `PuzzleGenerator`)
+  - **ui/** contains only UI components (TKinter-based interface)
+  - **algorithms/** contains puzzle solver implementations
+  
+- **Adding Solvers**: Read [algorithms/README.md](algorithms/README.md) before adding or modifying solvers
+  - Implement solvers as classes inheriting from `NonogramSolver`
+  - Solver signature: `solve(self, ruleset)` returning 2D list
+  - Ruleset contains: `width`, `height`, `rows` (list of lists), `columns` (list of lists)
+  - Return format: 2D list shaped `height x width` with `0` (empty) or `1` (filled)
