@@ -39,21 +39,7 @@ The **Row/Column Clues** section has two tabs:
 | `1,1,1` | Three single cells |
 | (empty) | No filled cells in this row/column |
 
-### Step 3: Save/Load (Optional)
-
-**To Save:**
-
-1. Click **Save Configuration**
-2. Choose a filename (e.g., `my_puzzle.json`)
-3. Click Save
-
-**To Load:**
-
-1. Click **Load Configuration**
-2. Select a previously saved JSON file
-3. Puzzle data will populate automatically
-
-### Step 4: Solve
+### Step 3: Solve
 
 1. Click **Solve Puzzle**
 2. Application automatically switches to Solution tab
@@ -63,13 +49,14 @@ The **Row/Column Clues** section has two tabs:
 Displays:
 
 - **Visual Grid**: White squares (0) and black squares (1)
+- **Clue Cells**: Row clues displayed to the left and column clues displayed above the grid
 - **Solution Info**:
   - Puzzle size (columns × rows)
   - Number of filled cells
 
 ### Grid Display Details
 
-- Each cell: 50×50 pixels
+- Each cell: 30×30 pixels
 - Black = filled cell (1)
 - White = empty cell (0)
 - Gray borders = cell boundaries
@@ -129,7 +116,9 @@ You can edit JSON files directly in a text editor:
 
 - Make sure clues are comma-separated numbers
 - No spaces before/after numbers
-- Correct example: `1,2,3`; Wrong example: `1, 2, 3`
+- Examples:
+  - Correct: `1,2,3`
+  - Incorrect: `1, 2, 3`
 
 ### Configuration won't load
 
