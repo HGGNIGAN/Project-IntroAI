@@ -1,6 +1,7 @@
 import copy
-from .base import NonogramSolver
 from typing import List, Optional
+
+from .base import NonogramSolver
 
 
 class BacktrackingSolver(NonogramSolver):
@@ -27,17 +28,15 @@ class BacktrackingSolver(NonogramSolver):
                 """
                 Main driver for the solving process.
                 """
-                # 1. Initialize a tri-state board for internal logic.
-                #    base.py initializes self.grid with 0s (White), but we need 'Unknown'.
+                # Initialize a tri-state board for internal logic. base.py initializes self.grid with 0s (White), but we need 'Unknown'.
                 self.board = [
                         [self.UNKNOWN for _ in range(self.width)]
                         for _ in range(self.height)
                 ]
 
-                # 2. Start the Propagate -> Backtrack cycle
+                # Start the Propagate -> Backtrack cycle
                 if self._backtrack(0, 0):
-                        # 3. Map internal tri-state board back to binary self.grid for return
-                        #    UNKNOWNs usually shouldn't exist if solved, but map them to 0 (White) just in case.
+                        # Map internal tri-state board back to binary self.grid for return UNKNOWNs usually shouldn't exist if solved, but map them to 0 (White) just in case.
                         for r in range(self.height):
                                 for c in range(self.width):
                                         val = self.board[r][c]
@@ -60,7 +59,7 @@ class BacktrackingSolver(NonogramSolver):
                 while changed:
                         changed = False
 
-                        # 1. Apply logic to Rows
+                        # Apply logic to Rows
                         for r in range(self.height):
                                 current_row = self.board[r]
                                 new_row = self._solve_line(
@@ -74,7 +73,7 @@ class BacktrackingSolver(NonogramSolver):
                                         self.board[r] = new_row
                                         changed = True
 
-                        # 2. Apply logic to Columns
+                        # Apply logic to Columns
                         for c in range(self.width):
                                 current_col = [
                                         self.board[r][c] for r in range(self.height)
@@ -184,14 +183,8 @@ class BacktrackingSolver(NonogramSolver):
 
                         # 3. Try placing the block at every possible start position 's'
                         # Range: from 'index' up to limit
-                        max_start = (
-                                length
-                                - min_space_suffix[clue_idx]
-                                - block_size
-                                + (clues[clue_idx])
-                        )  # logic check needed?
-                        # Simpler: limit is length - (space needed for THIS block + space for REST) + 1
-                        # But min_space_suffix includes this block.
+                        # limit is length - (space needed for THIS block + space for REST) + 1
+                        # min_space_suffix includes this block.
                         limit = length - min_space_suffix[clue_idx] + 1
 
                         for s in range(index, limit):
@@ -254,8 +247,7 @@ class BacktrackingSolver(NonogramSolver):
                 Recursive Backtracking step.
                 Finds the first UNKNOWN cell, guesses, and recurses.
                 """
-                # 1. Propagate Constraints first
-                #    (Implements Group 6: "LR and CB will run alternately")
+                # 1. Propagate Constraints first (LR and CB will run alternately)
                 if not self._propagate():
                         return False
 
@@ -277,7 +269,6 @@ class BacktrackingSolver(NonogramSolver):
                 target_r, target_c = next_cell
 
                 # 3. Guess BLACK
-                #    (Group 6 suggests: "Trying an empty cell to be a box... using all available methods")
                 snapshot = copy.deepcopy(self.board)
                 self.board[target_r][target_c] = self.BLACK
                 if self._backtrack(target_r, target_c):

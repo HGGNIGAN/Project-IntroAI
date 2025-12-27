@@ -1,10 +1,12 @@
 """Main UI application for puzzle configuration and solution display."""
 
 import tkinter as tk
-from tkinter import ttk, messagebox
+from tkinter import messagebox, ttk
+
+from algorithms import get_solver
+
 from .configurator import ConfiguratorUI
 from .display_nonogram import create_canvas_from_grid
-from algorithms import get_solver
 
 
 class NonogramSolverApp:
