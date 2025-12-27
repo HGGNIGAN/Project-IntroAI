@@ -9,12 +9,12 @@ class BacktrackingSolver(NonogramSolver):
         Advanced solver implementing Chronological Backtracking with Logical Rule filters.
 
         This solver uses a 'Propagate & Backtrack' strategy:
-        1. Propagation: Repeatedly applies logical deduction (Line Intersection) to all rows
-           and columns until no new information can be found. This finds the intersection of all valid permutations.
+        1. Propagation: Repeatedly applies logical deduction (Line Intersection) to all rows and columns until no new information can be found.
+           This finds the intersection of all valid permutations.
         2. Backtracking: If logic stalls, it guesses an unknown cell and recurses.
         """
 
-        name = "Backtracking Solver with Line Intersection"
+        name = "Backtracking Solver"
         description = (
                 "Backtracking solver optimized with Line Intersection logical checks."
         )
@@ -48,18 +48,18 @@ class BacktrackingSolver(NonogramSolver):
 
         def _propagate(self) -> bool:
                 """
-                Logical Rules Filter: Applies line intersection logic to all rows and columns
-                iteratively until the board stabilizes.
+                Implements the Logical Rules Filter, which repeatedly applies constraint propagation to deduce cell values.
+                The process continues until no new information can be derived (board reaches a stable state).
 
                 Returns:
-                    True if the board is in a valid state (no contradictions).
-                    False if a contradiction is found (a line has 0 valid permutations).
+                    bool: True if the board is in a valid state with no contradictions.
+                          False if a contradiction is found (a line has 0 valid permutations).
                 """
                 changed = True
                 while changed:
                         changed = False
 
-                        # Apply logic to Rows
+                        # Apply logic to rows
                         for r in range(self.height):
                                 current_row = self.board[r]
                                 new_row = self._solve_line(
@@ -73,7 +73,7 @@ class BacktrackingSolver(NonogramSolver):
                                         self.board[r] = new_row
                                         changed = True
 
-                        # Apply logic to Columns
+                        # Apply logic to columns
                         for c in range(self.width):
                                 current_col = [
                                         self.board[r][c] for r in range(self.height)
@@ -97,13 +97,11 @@ class BacktrackingSolver(NonogramSolver):
                 self, line: List[int], clues: List[int], length: int
         ) -> Optional[List[int]]:
                 """
-                Implements the 'Intersection of Permutations' logic.
+                Implements the 'Intersection of Permutations' logic:
 
-                This covers Group 6 Rules:
-                - Rule 1 (Intersection): Cells shared by all valid perms become BLACK.
-                - Rule 2 (Empty): Cells unreachable by any perm become WHITE.
-                - Rules 3, 4, 8, 9, 10 (segment logic): Implicitly handled by generating
-                  only permutations that fit the 'line' constraints (e.g. existing BLACKs).
+                - Cells shared by all valid perms become BLACK.
+                - Cells unreachable by any perm become WHITE.
+                - Generates only permutations that fit the 'line' constraints (e.g. existing BLACKs).
                 """
                 # Generate all valid permutations for this line that respect currently known cells
                 perms = self._generate_permutations(line, clues, length)
@@ -111,7 +109,7 @@ class BacktrackingSolver(NonogramSolver):
                 if not perms:
                         return None  # Impossible configuration (Contradiction)
 
-                # Optimization: If only 1 perm exists, that's the answer
+                # If only 1 perm exists, that's the answer
                 if len(perms) == 1:
                         return perms[0]
 
@@ -126,11 +124,10 @@ class BacktrackingSolver(NonogramSolver):
                                         result_line[i] = self.UNKNOWN
 
                 # Merge the new deductions with the existing knowledge
-                # (This ensures we don't accidentally unset a known value, though intersection logic shouldn't)
+                # This ensures we don't accidentally unset a known value, though intersection logic shouldn't
                 for i in range(length):
                         if line[i] != self.UNKNOWN and result_line[i] == self.UNKNOWN:
-                                # This technically shouldn't happen if perms respected line,
-                                # but good for safety.
+                                # This technically shouldn't happen if perms respected line, but better safe than sorry.
                                 result_line[i] = line[i]
 
                 return result_line
@@ -175,7 +172,7 @@ class BacktrackingSolver(NonogramSolver):
                                         results.append(potential_tail)
                                 return
 
-                        # 2. Pruning: Not enough space left?
+                        # 2. Pruning: Not enough space left
                         if index + min_space_suffix[clue_idx] > length:
                                 return
 
@@ -183,12 +180,12 @@ class BacktrackingSolver(NonogramSolver):
 
                         # 3. Try placing the block at every possible start position 's'
                         # Range: from 'index' up to limit
-                        # limit is length - (space needed for THIS block + space for REST) + 1
+                        # limit = length - (space needed for THIS block + space for REST) + 1
                         # min_space_suffix includes this block.
                         limit = length - min_space_suffix[clue_idx] + 1
 
                         for s in range(index, limit):
-                                # --- CHECK A: Can we place GAP (White) before this block? ---
+                                # CHECK A: Can we place GAP (White) before this block?
                                 # We need (s - index) white cells.
                                 gap_ok = True
                                 for k in range(index, s):
@@ -196,18 +193,17 @@ class BacktrackingSolver(NonogramSolver):
                                                 gap_ok = False
                                                 break
                                 if not gap_ok:
-                                        # If we hit a BLACK cell that we tried to make WHITE,
-                                        # we can't skip past it. Prune immediately.
+                                        # If we hit a BLACK cell that we tried to make WHITE, we can't skip past it. Prune immediately.
                                         break
 
-                                # --- CHECK B: Can we place the BLOCK (Black)? ---
+                                # CHECK B: Can we place the BLOCK (Black)?
                                 block_ok = True
                                 for k in range(s, s + block_size):
                                         if current_line[k] == self.WHITE:
                                                 block_ok = False
                                                 break
 
-                                # --- CHECK C: Mandatory Trailing Gap (White) ---
+                                # CHECK C: Mandatory Trailing Gap (White)
                                 # If not the last block, cell after block MUST be white.
                                 if clue_idx < len(clues) - 1:
                                         if (
@@ -219,8 +215,7 @@ class BacktrackingSolver(NonogramSolver):
 
                                 if block_ok:
                                         # Build segment: [Whites...] + [Blacks...] + [White (separator)]
-                                        # Note: We don't add the separator here explicitly in recursion logic
-                                        # to keep indices clean, but we account for it in 'next_index'
+                                        # Note: We don't add the separator here explicitly in recursion logic to keep indices clean, but we account for it in 'next_index'.
 
                                         new_segment = [self.WHITE] * (s - index) + [
                                                 self.BLACK
@@ -228,7 +223,7 @@ class BacktrackingSolver(NonogramSolver):
 
                                         next_index = s + block_size
 
-                                        # If not last block, we must force a separator (implicit white)
+                                        # If not last block, force a separator (implicit white)
                                         if clue_idx < len(clues) - 1:
                                                 new_segment.append(self.WHITE)
                                                 next_index += 1
@@ -247,12 +242,12 @@ class BacktrackingSolver(NonogramSolver):
                 Recursive Backtracking step.
                 Finds the first UNKNOWN cell, guesses, and recurses.
                 """
-                # 1. Propagate Constraints first (LR and CB will run alternately)
+                # 1. Propagate Constraints first
                 if not self._propagate():
                         return False
 
                 # 2. Find the best cell to guess (Heuristic: First Unknown)
-                #    Advanced: Could pick cell in row with most information/constraints
+                #    Could pick cell in row with most information/constraints
                 next_cell = None
                 for i in range(self.height):
                         for j in range(self.width):
@@ -262,7 +257,7 @@ class BacktrackingSolver(NonogramSolver):
                         if next_cell:
                                 break
 
-                # Base Case: No unknown cells left -> Solved!
+                # Base Case: No unknown cells left -> Solved
                 if not next_cell:
                         return True
 
