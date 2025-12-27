@@ -13,8 +13,8 @@ class LSSolver(NonogramSolver):
     def _solve_internal(self):
         self.total_ones = sum(sum(row) for row in self.rows)
 
-        max_restart = 50
-        max_step = 5000
+        max_restart = 100
+        max_step = 8000
         initial_temp = 5.0
         cooling_rate = 0.995
 

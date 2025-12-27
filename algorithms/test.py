@@ -3,10 +3,10 @@ from algorithms.local_search import LSSolver
 
 def run_test():
     ruleset = {
-        "width": 5,
-        "height": 5,
-        "rows": [[2], [4], [3], [3], [1]],
-        "columns": [[2], [3], [4], [1,1], [2]],
+        "width": 10,
+        "height": 10,
+        "rows": [[10], [1,6,1], [4], [2], [1,4], [1,1], [1,1], [3,6], [1,2], [1,4,1]],
+        "columns": [[2,1,1], [1,1], [2,1,1,1], [2,1,2], [3,1,1,1], [3,2,1,1], [3,1,1], [3,1,1], [1,1,3], [2,1,1,3]],
     }
 
     solver = LSSolver()
