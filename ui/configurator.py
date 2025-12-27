@@ -1,7 +1,8 @@
 import tkinter as tk
-from tkinter import ttk, filedialog, messagebox
+from tkinter import messagebox, ttk
+
+from algorithms import get_solver_info, list_solvers
 from core import ConfigManager, PuzzleGenerator
-from algorithms import list_solvers, get_solver_info
 
 
 class ConfiguratorUI:

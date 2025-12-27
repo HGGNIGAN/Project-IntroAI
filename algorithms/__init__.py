@@ -4,6 +4,7 @@ import importlib
 import inspect
 import pkgutil
 from pathlib import Path
+
 from .base import NonogramSolver
 
 
