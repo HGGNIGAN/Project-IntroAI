@@ -33,7 +33,7 @@ class LocalBeamSolver(NonogramSolver):
         3. Memoization: Caches line scores for speed.
         """
 
-        name = "Local Beam Search (Robust)"
+        name = "Local Beam Search"
         description = (
                 "Local Beam Search with global constraints and stochastic selection."
         )
@@ -57,11 +57,11 @@ class LocalBeamSolver(NonogramSolver):
         def _solve_internal(self) -> List[List[int]]:
                 """Main driver for the solving process."""
 
-                # 1. Pre-calculate global target (Total Black Cells needed)
+                # Pre-calculate global target (Total Black Cells needed)
                 self.target_black_count = sum(sum(row_clues) for row_clues in self.rows)
                 self._score_cache = {}
 
-                # 2. Initialize beams
+                # Initialize beams
                 current_beams = []
                 for _ in range(self.beam_width):
                         board = self._generate_random_board()
@@ -72,10 +72,10 @@ class LocalBeamSolver(NonogramSolver):
                 best_global_board = None
                 iterations_without_improvement = 0
 
-                # 3. Iteratively improve
+                # Iteratively improve
                 for iteration in range(self.max_iterations):
                         # --- Scoring & Solution Check ---
-                        # We augment the heuristic score with the Global Count Penalty here
+                        # Augment the heuristic score with the Global Count Penalty here
                         for beam in current_beams:
                                 count_diff = abs(
                                         beam.black_count - self.target_black_count
@@ -155,10 +155,9 @@ class LocalBeamSolver(NonogramSolver):
                                         )
 
                         # --- Selection (Stochastic Tournament) ---
-                        # Instead of taking strictly the top N, we take top N/2 strictly,
-                        # and the rest probabilistic from the top 3N candidates.
+                        # Instead of taking strictly the top N, we take top N/2 strictly, and the rest probabilistic from the top 3N candidates.
 
-                        # 1. Pop best candidates from heap
+                        # Pop best candidates from heap
                         pool_size = min(len(candidates_heap), self.beam_width * 3)
                         top_pool = heapq.nsmallest(pool_size, candidates_heap)
 
@@ -203,7 +202,7 @@ class LocalBeamSolver(NonogramSolver):
 
                         current_beams = next_beams
 
-                        # --- Stagnation Handling ---
+                        # Stagnation Handling
                         if iterations_without_improvement >= self.stagnation_threshold:
                                 # Hard Reset: Keep only 1 best beam, randomize the rest
                                 # This breaks out of deep local optima plateaus
@@ -223,9 +222,7 @@ class LocalBeamSolver(NonogramSolver):
                 )
                 return best_global_board  # type:ignore
 
-        # ------------------------------------------------------------------
         # Helper Methods
-        # ------------------------------------------------------------------
 
         def _create_initial_state(self, board) -> BeamState:
                 r_scores = [
@@ -339,7 +336,7 @@ class LocalBeamSolver(NonogramSolver):
                 for cell in sample:
                         moves.append([cell])
 
-                # Heuristic Move: If we have too many blacks, prefer flipping Black->White
+                # If we have too many blacks, prefer flipping Black->White
                 # If we have too few, prefer White->Black.
                 # This biases the Double-Flips to fix the count.
                 if len(candidate_cells) > 1:
@@ -349,7 +346,7 @@ class LocalBeamSolver(NonogramSolver):
                 return moves
 
         def _generate_random_board(self):
-                # Improved Init: Try to respect density roughly
+                # Try to respect density roughly
                 # This helps the search start closer to the target black count
                 total_cells = self.width * self.height
                 target = getattr(self, "target_black_count", total_cells // 2)
