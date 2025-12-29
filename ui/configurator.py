@@ -444,6 +444,9 @@ class ConfiguratorUI:
                                 )
                                 return
 
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
+
                         # Update UI from loaded config
                         width, height = self.config_manager.get_dimensions()
                         self._loading = True
@@ -489,6 +492,9 @@ class ConfiguratorUI:
                                         f"Failed to load configuration from {filepath}",
                                 )
                                 return
+
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
 
                         width, height = self.config_manager.get_dimensions()
                         self._loading = True
