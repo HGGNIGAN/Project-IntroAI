@@ -206,6 +206,18 @@ class NonogramSolverApp:
                 cols_dict = result["cols_dict"]
                 algo_name = result["algorithm_name"]
 
+                # Check if the solver returned an empty grid (no solution found)
+                if not grid or len(grid) == 0:
+                        messagebox.showwarning(
+                                "No Solution",
+                                "The solver could not find a valid solution for this puzzle.\n"
+                                "This might indicate an unsolvable puzzle or the solver needs more time.",
+                        )
+                        self.status_label.config(
+                                text="No solution found", foreground="orange"
+                        )
+                        return
+
                 self.cached_solution = grid
                 self.cached_row_clues = rows_dict
                 self.cached_col_clues = cols_dict
@@ -256,6 +268,14 @@ class NonogramSolverApp:
                         grid = self.cached_solution
                         row_clues = self.cached_row_clues
                         col_clues = self.cached_col_clues
+
+                # Validate grid is not empty
+                if not grid or len(grid) == 0:
+                        self.status_label.config(
+                                text="No solution to display (empty grid)",
+                                foreground="orange",
+                        )
+                        return
 
                 # Clear previous widgets from canvas_frame
                 for widget in self.canvas_frame.winfo_children():
