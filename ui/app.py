@@ -231,6 +231,10 @@ class NonogramSolverApp:
                 self.cached_solution = None
                 self.cached_row_clues = None
                 self.cached_col_clues = None
+                # Remove previously-displayed solution
+                for widget in self.canvas_frame.winfo_children():
+                        widget.destroy()
+
                 self.status_label.config(
                         text="Solution outdated. Solve again to update.",
                         foreground="orange",
