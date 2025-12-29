@@ -2,6 +2,7 @@ from .base import NonogramSolver
 from enum import Enum
 import copy
 from queue import Queue
+import time
 
 class CSPSolver(NonogramSolver):
     name = "CSP Solver"
@@ -75,87 +76,97 @@ class CSPSolver(NonogramSolver):
                     Only called once for each new line.\n
                     possibilty format: list[int]
                     """
+                    print(f"PERF: Generating possibilities for line type {self.type}, index {self.index}")
+                    print(f"Clues: {self.clues}")
+                    start_time = time.time()
+
                     # empty clues case; line would be empty, only 1 possibility
                     if not self.clues or all(clue == 0 for clue in self.clues):
                         self.possibilities.append([EMPTY] * self.length)
 
-                    # The clues tell us there must be these blocks of FILLEDs in our line
-                    filledBlocks = []
-                    remainingBits = self.length
-                    for clue in self.clues:
-                        filledBlocks.append([FILLED for _ in range(clue)])
-                        remainingBits -= clue
+                    else:
+                        # The clues tell us there must be these blocks of FILLEDs in our line
+                        filledBlocks = []
+                        remainingBits = self.length
+                        for clue in self.clues:
+                            filledBlocks.append([FILLED for _ in range(clue)])
+                            remainingBits -= clue
 
-                    # and between them are blocks that either can have EMPTYs or nothing at all
-                    # Of course, between any 2 consecutive FILLED blocks, there must be
-                    # at least 1 EMPTY
+                        # and between them are blocks that either can have EMPTYs or nothing at all
+                        # Of course, between any 2 consecutive FILLED blocks, there must be
+                        # at least 1 EMPTY
 
-                    emptyRequired = []
-                    for _ in range(len(filledBlocks)-1):
-                        emptyRequired.append([EMPTY])
-                        remainingBits -= 1
-                    emptyRequired.append([]) # at the end
-                    emptyRequired.insert(0, []) # at the beginning
-                    slots = len(emptyRequired)
+                        emptyRequired = []
+                        for _ in range(len(filledBlocks)-1):
+                            emptyRequired.append([EMPTY])
+                            remainingBits -= 1
+                        emptyRequired.append([]) # at the end
+                        emptyRequired.insert(0, []) # at the beginning
+                        slots = len(emptyRequired)
 
-                    # Consider the bits left over after filling in the required EMPTYs
-                    emptyOptional = []
-                    def emptyMBitsInKSlots(
-                        m: int,
-                        k: int,
-                        current: list,
-                        emptyOptional: list
-                    ):
-                        if k == 1: # base case
-                            current.append([EMPTY] * m)
-                            # after this, no more EMPTYs to append
-                            emptyOptional.append(copy.deepcopy(current))
-                            # backtrack
-                            current.pop()
-                            return
-                        else: # normal case
-                            for i in range(m+1):
-                                current.append([EMPTY] * i)
-                                emptyMBitsInKSlots(m-i,k-1,current, emptyOptional)
+                        # Consider the bits left over after filling in the required EMPTYs
+                        emptyOptional = []
+                        def emptyMBitsInKSlots(
+                            m: int,
+                            k: int,
+                            current: list,
+                            emptyOptional: list
+                        ):
+                            if k == 1: # base case
+                                current.append([EMPTY] * m)
+                                # after this, no more EMPTYs to append
+                                emptyOptional.append(copy.deepcopy(current))
                                 # backtrack
                                 current.pop()
-                    emptyMBitsInKSlots(remainingBits, slots, [], emptyOptional)
+                                return
+                            else: # normal case
+                                for i in range(m+1):
+                                    current.append([EMPTY] * i)
+                                    emptyMBitsInKSlots(m-i,k-1,current, emptyOptional)
+                                    # backtrack
+                                    current.pop()
+                        emptyMBitsInKSlots(remainingBits, slots, [], emptyOptional)
 
 
-                    # NOW we're actually creating blocks of EMPTYs or nothing
-                    mergedEmpties = []
-                    for constructorOptional in emptyOptional:
-                        merged = []
-                        for required, optional in zip(emptyRequired, constructorOptional):
-                                merged_result = required + optional
-                                merged.append(merged_result)
+                        # NOW we're actually creating blocks of EMPTYs or nothing
+                        mergedEmpties = []
+                        for constructorOptional in emptyOptional:
+                            merged = []
+                            for required, optional in zip(emptyRequired, constructorOptional):
+                                    merged_result = required + optional
+                                    merged.append(merged_result)
 
-                        mergedEmpties.append(merged)
+                            mergedEmpties.append(merged)
 
-                    # and finally, weave the EMPTY and FILLED blocks together
-                    for constructorEmpty in mergedEmpties: # dude why am i writing like it's java lol
-                        nested = []
-                        for filled, empty in zip(filledBlocks, constructorEmpty[:-1:]):
-                            nested.append(empty)
-                            nested.append(filled)
-                        nested.append(constructorEmpty[-1])
+                        # and finally, weave the EMPTY and FILLED blocks together
+                        for constructorEmpty in mergedEmpties: # dude why am i writing like it's java lol
+                            nested = []
+                            for filled, empty in zip(filledBlocks, constructorEmpty[:-1:]):
+                                nested.append(empty)
+                                nested.append(filled)
+                            nested.append(constructorEmpty[-1])
 
-                        def flatten(
-                            lst: list
-                        ):
-                            result = []
-                            for element in lst:
-                                if not isinstance(element, list):
-                                    result.append(element)
-                                else:
-                                    if len(element) == 0: continue
-                                    result.extend(flatten(element))
-                            return result
+                            def flatten(
+                                lst: list
+                            ):
+                                result = []
+                                for element in lst:
+                                    if not isinstance(element, list):
+                                        result.append(element)
+                                    else:
+                                        if len(element) == 0: continue
+                                        result.extend(flatten(element))
+                                return result
 
-                        possibility = flatten(nested)
+                            possibility = flatten(nested)
 
-                        self.possibilities.append(possibility)
+                            self.possibilities.append(possibility)
 
+                    print(f"PERF: Generated {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
+                    print("Possibilities:")
+                    for possibility in self.possibilities:
+                        print(f"  {possibility}")
+                    print()
                     return
 
                 def prune(self,
@@ -168,6 +179,8 @@ class CSPSolver(NonogramSolver):
                         - element at index 0 must be EMPTY, at index 3 must be FILLED\n
                     => constraint = [EMPTY, None, None, FILLED]
                     """
+                    print(f"PERF: Pruning line type={self.type}, index={self.index}")
+                    start_time = time.time()
                     newPossibilities = []
                     for possibility in self.possibilities:
                         valid = True
@@ -179,12 +192,19 @@ class CSPSolver(NonogramSolver):
                         if valid: newPossibilities.append(possibility)
                     self.possibilities = newPossibilities
 
+                    print(f"PERF: Pruned to {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
+                    for possibility in self.possibilities:
+                        print(f"  {possibility}")
+                    print()
+
                 def perpendicular(self,
                     lines: dict,
                     processingQueue: list):
                     """
                     Returns list of propagated perpendicular lines (list[processingEntry])
                     """
+                    print(f"PERF: Finding propagating perpendicular lines of line type={self.type}, index={self.index}")
+                    start_time = time.time()
                     # I don't think a line can have 0 possibilities, but just in case
                     if not self.possibilities: return []
 
@@ -192,12 +212,14 @@ class CSPSolver(NonogramSolver):
                     perpLines = []
                     checker = copy.deepcopy(self.possibilities[0])
 
-                    if len(self.possibilities) > 1:
+                    if len(self.possibilities) > 2:
                         for possibility in self.possibilities[1:]:
 
                             for i in range(len(checker)):
-                                if checker[i] == possibility[i]: continue # FILLED==FILLED or EMPTY==EMPTY
+                                if checker[i] == possibility[i]:
+                                    continue # FILLED==FILLED or EMPTY==EMPTY
                                 checker[i] = None
+                    print(f"Checker: {checker}")
 
                     # find possible processing queue entries
                     key = "columns" if self.type == ROW else "rows"
@@ -205,12 +227,18 @@ class CSPSolver(NonogramSolver):
                     for i in range(len(checker)):
                         if checker[i] in (EMPTY, FILLED):
                             perpLine = lineLst[i]
-                            if len(perpLine.possibilities) == 1: continue # skip solved lines
+                            if len(perpLine.possibilities) == 1:
+                                continue # skip solved lines
                             constraint = [None for _ in range(perpLine.length)]
                             constraint[self.index] = checker[i]
 
                             newEntry = processingEntry(perpLine, constraint)
                             perpLines.append(newEntry)
+
+                    print(f"PERF: Found {len(perpLines)} propagating perpendicular lines in {time.time() - start_time:.4f}s")
+                    for entry in perpLines:
+                        entry.printEntry()
+                    print()
                     return perpLines
 
             # main solution!
@@ -253,8 +281,7 @@ class CSPSolver(NonogramSolver):
                     entryType, entryIndex = COLUMN, ptrC
                     greedyOrdering.append((entryType, entryIndex))
                     ptrC += 1
-            # i literally don't give a shit, i'm just gonna append the rest without a care
-            # what are you gonna do about MY heuristic? that's right, nothing lol
+            # TODO: figure out how to order the remaining lines in a greedy manner instead of just lazily slapping them on
             if ptrC < self.width:
                 while ptrC < self.width:
                     greedyOrdering.append((COLUMN, ptrC))
@@ -284,35 +311,75 @@ class CSPSolver(NonogramSolver):
                             else: mergedConstraint.append(None)
                         self.constraint = mergedConstraint
 
+                def printEntry(self):
+                    print(f"Entry type={self.line.type}, index={self.line.index}")
+                    print(f"Constraints: {self.constraint}")
+
             processingQueue: list[processingEntry] = [] # effectively a queue, with pop(0) and append()
-            # at start, add all elements in greedy order to queue, with no constraint
+            def printQueue(processingQueue: list[processingEntry]):
+                print("Processing Queue:")
+                for entry in processingQueue:
+                    print("**")
+                    print(f"Entry type={entry.line.type}, index={entry.line.index}")
+                    print(f"Constraint: {entry.constraint}")
+                print()
+
+            # TODO: implement special processing for these first lines; don't prune, just find perpendicular lines from them
+            # instead of adding them to processing queue with no constraint
             for (entryType, entryIndex) in greedyOrdering:
                 constraintLength = self.width if entryType == ROW else self.height
+                nextLine = R[entryIndex] if entryType == ROW else C[entryIndex]
                 processingQueue.append(
-                    processingEntry(R[entryIndex],
+                    processingEntry(nextLine,
                                     [None for _ in range(constraintLength)]
                 ))
+
+            # print("processingQueue preload: ")
+            # printQueue(processingQueue)
+
             # regular workflow to induce propagation
+            print("START PROCESSING")
+            print("---------------------------------------------")
             while len(processingQueue) > 0:
                 currEntry: processingEntry = processingQueue.pop(0)
                 currLine: line = currEntry.line
                 currConstraint: list = currEntry.constraint
 
+                # TODO: You can't skip the starting lines!!! If they're already solved from the get-go, they can propagate!
+                if len(currLine.possibilities) <= 1:
+                    print(f"PERF: Skipping already solved line type={currLine.type}, index={currLine.index}")
+                    print("---------------------------------------------")
+                    continue
+
+                print(f"PERF: Processing line type={currLine.type}, index={currLine.index}")
+
+                # in case prune() doesn't prune anything
+                prePossCount = len(currLine.possibilities)
+
                 # remove invalid possibilities based on constraint
                 currLine.prune(currConstraint)
 
+                if len(currLine.possibilities) == prePossCount:
+                    print("PERF: Line's possibilities unpruned")
+
+                perpLines: list[processingEntry] = []
                 # from the remaining possibilities, find propagated perpendicular lines
-                perpLines: list[processingEntry] = currLine.perpendicular(lines, processingQueue)
+                perpLines = currLine.perpendicular(lines, processingQueue)
+                # if line solved, don't add to queue at all
                 # if line alr in queue, merge entry, else put entry to queue
                 for entry in perpLines:
                     alreadyInQueue = False
                     for existingEntry in processingQueue: # this for loop is the entire reason why processingQueue uses a list lol
                         if entry.line == existingEntry.line:
+                            print(f"PERF: Merging constraint for line type={entry.line.type}, index={entry.line.index}")
                             existingEntry.mergeEntry(entry)
                             alreadyInQueue = True
                             break
-                    if not alreadyInQueue: processingQueue.append(entry)
-
+                    if not alreadyInQueue:
+                        print(f"PERF: Adding line type={entry.line.type}, index={entry.line.type} to queue")
+                        processingQueue.append(entry)
+                print()
+                print("---------------------------------------------")
             # by this point in the program, all lines should only have 1 possibility: their solution
 
             print("Creating solution....")
