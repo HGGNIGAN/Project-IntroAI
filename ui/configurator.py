@@ -100,7 +100,7 @@ class ConfiguratorUI:
                 )
                 self.width_var = tk.IntVar(value=5)
                 width_spinbox = ttk.Spinbox(
-                        dim_frame, from_=1, to=20, textvariable=self.width_var, width=10
+                        dim_frame, from_=1, to=100, textvariable=self.width_var, width=10
                 )
                 width_spinbox.grid(row=0, column=1, sticky="w", padx=5, pady=5)
 
@@ -112,7 +112,7 @@ class ConfiguratorUI:
                 height_spinbox = ttk.Spinbox(
                         dim_frame,
                         from_=1,
-                        to=20,
+                        to=100,
                         textvariable=self.height_var,
                         width=10,
                 )
