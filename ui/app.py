@@ -2,6 +2,7 @@
 
 import multiprocessing
 import queue
+import time
 import tkinter as tk
 from tkinter import messagebox, ttk
 
@@ -56,6 +57,8 @@ class NonogramSolverApp:
                 self.solve_queue = multiprocessing.Queue()
                 self.current_process = None
                 self.is_solving = False
+                self.solve_start_time = None
+                self.solve_time = None
 
                 self.notebook = ttk.Notebook(self.root)
                 self.notebook.pack(fill="both", expand=True, padx=5, pady=5)
@@ -133,6 +136,7 @@ class NonogramSolverApp:
                         }
 
                         self.is_solving = True
+                        self.solve_start_time = time.time()
                         self.status_label.config(
                                 text=f"Solving... ({algorithm_name})", foreground="blue"
                         )
@@ -206,15 +210,20 @@ class NonogramSolverApp:
                 cols_dict = result["cols_dict"]
                 algo_name = result["algorithm_name"]
 
+                # Calculate solve time
+                elapsed_time = time.time() - self.solve_start_time if self.solve_start_time else 0
+
                 self.cached_solution = grid
                 self.cached_row_clues = rows_dict
                 self.cached_col_clues = cols_dict
+                self.solve_time = elapsed_time
 
                 self.display_solution(grid, rows_dict, cols_dict)
                 self.notebook.select(1)
 
+                time_str = f"{elapsed_time:.5f}s"
                 self.status_label.config(
-                        text=f"Solved {result['width']}x{result['height']} using {algo_name}",
+                        text=f"Solved {result['width']}x{result['height']} using {algo_name} in {time_str}",
                         foreground="green",
                 )
 
@@ -339,6 +348,10 @@ class NonogramSolverApp:
                 ttk.Label(info_frame, text=f"Filled: {filled}/{rows * cols}").pack(
                         anchor="w", pady=5
                 )
+                if self.solve_time is not None:
+                        ttk.Label(info_frame, text=f"Time: {self.solve_time:.5f}s").pack(
+                                anchor="w", pady=5
+                        )
 
 
 def main():
