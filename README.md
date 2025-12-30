@@ -29,6 +29,23 @@ python main.py
 
 This will launch the Nonogram Solver application with a graphical interface.
 
+#### Running with PyPy
+
+- Install PyPy (PyPy3 recommended) for your platform from <https://www.pypy.org/>.
+- Then run the application with PyPy:
+
+```bash
+pypy main.py
+```
+
+or:
+
+```bash
+pypy3 main.py
+```
+
+- Notes: PyPy often improves performance for pure-Python code, but binary C extensions or platform-specific GUI bindings may be incompatible. On some platforms (especially Windows) the Tkinter GUI may not be available under PyPy; if you encounter Tkinter import errors, run the app with a CPython interpreter instead.
+
 ### Usage Guide
 
 #### Configure a Puzzle
