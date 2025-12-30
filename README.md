@@ -14,11 +14,11 @@ Current directory
 ├── core/                       # Core business logic
 │   ├── config_manager.py       # Configuration management (save/load)
 │   └── puzzle_generator.py     # Random puzzle generation
-└── ui/                         # User interface components
-    ├── app.py                  # Main application window
-    ├── configurator.py         # Puzzle configuration UI
-    └── display_nonogram.py     # Grid display functionality
-    
+├── ui/                         # User interface components
+│   ├── app.py                  # Main application window
+│   ├── configurator.py         # Puzzle configuration UI
+│   └── display_nonogram.py     # Grid display functionality
+└── samples/                    # Predefined puzzle samples (.json) 
 ```
 
 ### Running the Application

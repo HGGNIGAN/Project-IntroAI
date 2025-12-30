@@ -12,12 +12,12 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
 
 ### Step 1: Set Dimensions
 
-- Use **Width** spinbox to set number of columns (1-20)
-- Use **Height** spinbox to set number of rows (1-20)
+- Use **Width** spinbox to set number of columns (1-100)
+- Use **Height** spinbox to set number of rows (1-100)
 
 ### Step 2: Generate Puzzle or Enter Clues
 
-**Option A: Generate Random Puzzle** (Recommended)
+**Option A: Generate Random Puzzle**
 
 1. Click **Generate Random**
 2. A random puzzle will be created automatically:
@@ -25,7 +25,13 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
    - Grid is printed to terminal
    - Config is updated
 
-**Option B: Enter Clues Manually**
+**Option B: Import Predefined Puzzles**
+
+1. Select the puzzle inside the selection box next to the random generator button
+2. Click **Load Selected**
+3. The puzzle will be loaded into the settings section and ready to be solved
+
+**Option C: Enter Clues Manually**
 
 The **Row/Column Clues** section has two tabs:
 
