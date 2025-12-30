@@ -1,5 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from pathlib import Path
+from tkinter import filedialog, messagebox, ttk
 
 from algorithms import get_solver_info, list_solvers
 from core import ConfigManager, PuzzleGenerator
@@ -100,7 +101,11 @@ class ConfiguratorUI:
                 )
                 self.width_var = tk.IntVar(value=5)
                 width_spinbox = ttk.Spinbox(
-                        dim_frame, from_=1, to=20, textvariable=self.width_var, width=10
+                        dim_frame,
+                        from_=1,
+                        to=100,
+                        textvariable=self.width_var,
+                        width=10,
                 )
                 width_spinbox.grid(row=0, column=1, sticky="w", padx=5, pady=5)
 
@@ -112,7 +117,7 @@ class ConfiguratorUI:
                 height_spinbox = ttk.Spinbox(
                         dim_frame,
                         from_=1,
-                        to=20,
+                        to=100,
                         textvariable=self.height_var,
                         width=10,
                 )
@@ -145,6 +150,37 @@ class ConfiguratorUI:
                         button_frame,
                         text="Generate Random",
                         command=self.generate_random_puzzle,
+                ).pack(side="left", padx=5, pady=8)
+
+                # Samples combobox and load button (loads from repository samples folder)
+                self.sample_var = tk.StringVar()
+                sample_values = []
+                try:
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
+                        if samples_dir.exists():
+                                sample_values = [
+                                        p.name
+                                        for p in samples_dir.iterdir()
+                                        if p.suffix.lower() == ".json"
+                                ]
+                except Exception:
+                        sample_values = []
+
+                self.sample_combo = ttk.Combobox(
+                        button_frame,
+                        textvariable=self.sample_var,
+                        values=sample_values,
+                        state="readonly",
+                        width=30,
+                )
+                if sample_values:
+                        self.sample_var.set(sample_values[0])
+                self.sample_combo.pack(side="left", padx=5, pady=8)
+
+                ttk.Button(
+                        button_frame,
+                        text="Load Selected",
+                        command=self.load_sample_from_list,
                 ).pack(side="left", padx=5, pady=8)
 
                 ttk.Button(button_frame, text="Solve Puzzle", command=self.solve).pack(
@@ -383,6 +419,96 @@ class ConfiguratorUI:
 
                 # Update UI
                 self.update_clue_entries()
+
+        def load_sample(self):
+                """Let user pick a sample JSON from the predefined samples folder and load it."""
+                try:
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
+                        if not samples_dir.exists():
+                                samples_dir = Path.cwd() / "samples"
+
+                        filepath = filedialog.askopenfilename(
+                                title="Select sample JSON",
+                                initialdir=str(samples_dir),
+                                filetypes=[("JSON files", "*.json")],
+                        )
+                        if not filepath:
+                                return
+
+                        # Load into config manager
+                        success = self.config_manager.load_config(filepath)
+                        if not success:
+                                messagebox.showerror(
+                                        "Load Error",
+                                        f"Failed to load configuration from {filepath}",
+                                )
+                                return
+
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
+
+                        # Update UI from loaded config
+                        width, height = self.config_manager.get_dimensions()
+                        self._loading = True
+                        self.width_var.set(width)
+                        self.height_var.set(height)
+                        self.update_clue_entries()
+                        self._loading = False
+
+                        # Invalidate cached solution if needed
+                        if self.cache_invalidate_callback:
+                                self.cache_invalidate_callback()
+
+                        messagebox.showinfo(
+                                "Loaded",
+                                f"Loaded sample: {Path(filepath).name}",
+                        )
+                except Exception as e:
+                        messagebox.showerror("Error", f"Error loading sample: {e}")
+
+        def load_sample_from_list(self):
+                """Load the currently-selected sample from the repository `predefined samples` folder."""
+                selected = self.sample_var.get()
+                if not selected:
+                        messagebox.showwarning(
+                                "No Sample", "No sample selected to load."
+                        )
+                        return
+
+                try:
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
+                        filepath = samples_dir / selected
+                        if not filepath.exists():
+                                messagebox.showerror(
+                                        "Load Error",
+                                        f"Sample not found: {selected}",
+                                )
+                                return
+
+                        success = self.config_manager.load_config(str(filepath))
+                        if not success:
+                                messagebox.showerror(
+                                        "Load Error",
+                                        f"Failed to load configuration from {filepath}",
+                                )
+                                return
+
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
+
+                        width, height = self.config_manager.get_dimensions()
+                        self._loading = True
+                        self.width_var.set(width)
+                        self.height_var.set(height)
+                        self.update_clue_entries()
+                        self._loading = False
+
+                        if self.cache_invalidate_callback:
+                                self.cache_invalidate_callback()
+
+                        messagebox.showinfo("Loaded", f"Loaded sample: {selected}")
+                except Exception as e:
+                        messagebox.showerror("Error", f"Error loading sample: {e}")
 
         def solve(self):
                 """Solve the puzzle with current configuration."""
