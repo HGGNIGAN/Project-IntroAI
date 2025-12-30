@@ -1,6 +1,6 @@
 import tkinter as tk
-from tkinter import messagebox, ttk, filedialog
 from pathlib import Path
+from tkinter import filedialog, messagebox, ttk
 
 from algorithms import get_solver_info, list_solvers
 from core import ConfigManager, PuzzleGenerator
@@ -101,7 +101,11 @@ class ConfiguratorUI:
                 )
                 self.width_var = tk.IntVar(value=5)
                 width_spinbox = ttk.Spinbox(
-                        dim_frame, from_=1, to=100, textvariable=self.width_var, width=10
+                        dim_frame,
+                        from_=1,
+                        to=100,
+                        textvariable=self.width_var,
+                        width=10,
                 )
                 width_spinbox.grid(row=0, column=1, sticky="w", padx=5, pady=5)
 
@@ -152,9 +156,13 @@ class ConfiguratorUI:
                 self.sample_var = tk.StringVar()
                 sample_values = []
                 try:
-                        samples_dir = Path(__file__).resolve().parents[1] / "predefined samples"
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
                         if samples_dir.exists():
-                                sample_values = [p.name for p in samples_dir.iterdir() if p.suffix.lower() == ".json"]
+                                sample_values = [
+                                        p.name
+                                        for p in samples_dir.iterdir()
+                                        if p.suffix.lower() == ".json"
+                                ]
                 except Exception:
                         sample_values = []
 
@@ -415,9 +423,9 @@ class ConfiguratorUI:
         def load_sample(self):
                 """Let user pick a sample JSON from the predefined samples folder and load it."""
                 try:
-                        samples_dir = Path(__file__).resolve().parents[1] / "predefined samples"
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
                         if not samples_dir.exists():
-                                samples_dir = Path.cwd() / "predefined samples"
+                                samples_dir = Path.cwd() / "samples"
 
                         filepath = filedialog.askopenfilename(
                                 title="Select sample JSON",
@@ -435,6 +443,9 @@ class ConfiguratorUI:
                                         f"Failed to load configuration from {filepath}",
                                 )
                                 return
+
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
 
                         # Update UI from loaded config
                         width, height = self.config_manager.get_dimensions()
@@ -459,11 +470,13 @@ class ConfiguratorUI:
                 """Load the currently-selected sample from the repository `predefined samples` folder."""
                 selected = self.sample_var.get()
                 if not selected:
-                        messagebox.showwarning("No Sample", "No sample selected to load.")
+                        messagebox.showwarning(
+                                "No Sample", "No sample selected to load."
+                        )
                         return
 
                 try:
-                        samples_dir = Path(__file__).resolve().parents[1] / "predefined samples"
+                        samples_dir = Path(__file__).resolve().parents[1] / "samples"
                         filepath = samples_dir / selected
                         if not filepath.exists():
                                 messagebox.showerror(
@@ -479,6 +492,9 @@ class ConfiguratorUI:
                                         f"Failed to load configuration from {filepath}",
                                 )
                                 return
+
+                        # Save the loaded sample to the config file
+                        self.config_manager.save_config()
 
                         width, height = self.config_manager.get_dimensions()
                         self._loading = True

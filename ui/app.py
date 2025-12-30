@@ -8,36 +8,7 @@ from tkinter import messagebox, ttk
 
 from .configurator import ConfiguratorUI
 from .display_nonogram import create_canvas_from_grid
-
-
-def solve_process_worker(solver_name, ruleset, rows_dict, cols_dict, result_queue):
-        """
-        Independent process that runs the solver.
-        """
-        try:
-                # Re-import inside process to avoid pickling issues
-                from algorithms import get_solver
-
-                solver = get_solver(solver_name)
-
-                if not solver:
-                        raise ValueError(f"Solver '{solver_name}' not found")
-
-                # Heavy computation happens here
-                solution = solver.solve(ruleset)
-
-                result = {
-                        "status": "success",
-                        "solution": solution,
-                        "rows_dict": rows_dict,
-                        "cols_dict": cols_dict,
-                        "algorithm_name": solver_name,
-                        "width": ruleset["width"],
-                        "height": ruleset["height"],
-                }
-                result_queue.put(result)
-        except Exception as e:
-                result_queue.put({"status": "error", "message": str(e)})
+from .worker import solve_process_worker
 
 
 class NonogramSolverApp:
@@ -213,6 +184,18 @@ class NonogramSolverApp:
                 # Calculate solve time
                 elapsed_time = time.time() - self.solve_start_time if self.solve_start_time else 0
 
+                # Check if the solver returned an empty grid (no solution found)
+                if not grid or len(grid) == 0:
+                        messagebox.showwarning(
+                                "No Solution",
+                                "The solver could not find a valid solution for this puzzle.\n"
+                                "This might indicate an unsolvable puzzle or the solver needs more time.",
+                        )
+                        self.status_label.config(
+                                text="No solution found", foreground="orange"
+                        )
+                        return
+
                 self.cached_solution = grid
                 self.cached_row_clues = rows_dict
                 self.cached_col_clues = cols_dict
@@ -265,6 +248,14 @@ class NonogramSolverApp:
                         grid = self.cached_solution
                         row_clues = self.cached_row_clues
                         col_clues = self.cached_col_clues
+
+                # Validate grid is not empty
+                if not grid or len(grid) == 0:
+                        self.status_label.config(
+                                text="No solution to display (empty grid)",
+                                foreground="orange",
+                        )
+                        return
 
                 # Clear previous widgets from canvas_frame
                 for widget in self.canvas_frame.winfo_children():
