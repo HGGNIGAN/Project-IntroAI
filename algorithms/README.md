@@ -27,9 +27,7 @@ class MySolver(NonogramSolver):
                 # self.width, self.height, self.rows, self.columns, self.grid
                 
                 # TODO: implement your algorithm by modifying self.grid
-                for y in range(self.height):
-                        for x in range(self.width):
-                                self.grid[y][x] = 0  # your logic here
+                # your logic here
                 
                 return self.grid
 ```
