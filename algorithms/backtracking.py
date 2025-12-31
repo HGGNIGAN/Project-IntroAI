@@ -1,5 +1,6 @@
-import copy
 from typing import List, Optional
+
+import numpy as np
 
 from .base import NonogramSolver
 
@@ -28,22 +29,18 @@ class BacktrackingSolver(NonogramSolver):
                 """
                 Main driver for the solving process.
                 """
-                # Initialize a tri-state board for internal logic. base.py initializes self.grid with 0s (White), but we need 'Unknown'.
-                self.board = [
-                        [self.UNKNOWN for _ in range(self.width)]
-                        for _ in range(self.height)
-                ]
+                # Initialize board
+                self.board = np.full(
+                        (self.height, self.width), self.UNKNOWN, dtype=np.int8
+                )
 
                 # Start the Propagate -> Backtrack cycle
-                if self._backtrack(0, 0):
-                        # Map internal tri-state board back to binary self.grid for return UNKNOWNs usually shouldn't exist if solved, but map them to 0 (White) just in case.
-                        for r in range(self.height):
-                                for c in range(self.width):
-                                        val = self.board[r][c]
-                                        self.grid[r][c] = 1 if val == self.BLACK else 0
-                        return self.grid
+                if self._backtrack():
+                        # Map internal state to binary result
+                        # Convert -1 (UNKNOWN) to 0 (WHITE) and 1 to 1.
+                        final_grid = np.where(self.board == self.BLACK, 1, 0)
+                        return final_grid.tolist()
                 else:
-                        # No solution found
                         return []
 
         def _propagate(self) -> bool:
@@ -59,43 +56,39 @@ class BacktrackingSolver(NonogramSolver):
                 while changed:
                         changed = False
 
-                        # Apply logic to rows
+                        # --- ROWS ---
                         for r in range(self.height):
-                                current_row = self.board[r]
-                                new_row = self._solve_line(
-                                        current_row, self.rows[r], self.width
-                                )
+                                current_row = self.board[r, :]
 
-                                if new_row is None:  # Contradiction found
-                                        return False
+                                # Check intersection of possibilities
+                                new_row = self._solve_line(current_row, self.rows[r])
 
-                                if new_row != current_row:
-                                        self.board[r] = new_row
+                                if new_row is None:
+                                        return False  # Contradiction
+
+                                if not np.array_equal(current_row, new_row):
+                                        self.board[r, :] = new_row
                                         changed = True
 
-                        # Apply logic to columns
+                        # --- COLUMNS ---
                         for c in range(self.width):
-                                current_col = [
-                                        self.board[r][c] for r in range(self.height)
-                                ]
-                                new_col = self._solve_line(
-                                        current_col, self.columns[c], self.height
-                                )
+                                current_col = self.board[:, c]
 
-                                if new_col is None:  # Contradiction found
-                                        return False
+                                # Check intersection of possibilities
+                                new_col = self._solve_line(current_col, self.columns[c])
 
-                                if new_col != current_col:
-                                        # Apply changes back to the board
-                                        for r in range(self.height):
-                                                self.board[r][c] = new_col[r]
+                                if new_col is None:
+                                        return False  # Contradiction
+
+                                if not np.array_equal(current_col, new_col):
+                                        self.board[:, c] = new_col
                                         changed = True
 
                 return True
 
         def _solve_line(
-                self, line: List[int], clues: List[int], length: int
-        ) -> Optional[List[int]]:
+                self, current_line: np.ndarray, clues: List[int]
+        ) -> Optional[np.ndarray]:
                 """
                 Implements the 'Intersection of Permutations' logic:
 
@@ -103,43 +96,49 @@ class BacktrackingSolver(NonogramSolver):
                 - Cells unreachable by any perm become WHITE.
                 - Generates only permutations that fit the 'line' constraints (e.g. existing BLACKs).
                 """
-                # Generate all valid permutations for this line that respect currently known cells
-                perms = self._generate_permutations(line, clues, length)
+                length = len(current_line)
 
-                if not perms:
-                        return None  # Impossible configuration (Contradiction)
+                # Generate all valid permutations for this line that respect currently known cells
+                perms_list = self._generate_permutations(current_line, clues, length)
+
+                if not perms_list:
+                        return None  # Contradiction
 
                 # If only 1 perm exists, that's the answer
-                if len(perms) == 1:
-                        return perms[0]
+                if len(perms_list) == 1:
+                        return np.array(perms_list[0], dtype=np.int8)
 
                 # Find Intersection
-                # Initialize result with the first permutation
-                result_line = list(perms[0])
+                perms_matrix = np.array(perms_list, dtype=np.int8)
 
-                for p in perms[1:]:
-                        for i in range(length):
-                                # If cells differ between permutations, they remain/become UNKNOWN
-                                if result_line[i] != p[i]:
-                                        result_line[i] = self.UNKNOWN
+                # Find columns where ALL rows are BLACK (1)
+                # axis=0 means "look down the column across all permutations"
+                all_black = np.all(perms_matrix == self.BLACK, axis=0)
+
+                # Find columns where ALL rows are WHITE (0)
+                all_white = np.all(perms_matrix == self.WHITE, axis=0)
+
+                # Construct the result line
+                result_line = np.full(length, self.UNKNOWN, dtype=np.int8)
+                result_line[all_black] = self.BLACK
+                result_line[all_white] = self.WHITE
 
                 # Merge the new deductions with the existing knowledge
                 # This ensures we don't accidentally unset a known value, though intersection logic shouldn't
-                for i in range(length):
-                        if line[i] != self.UNKNOWN and result_line[i] == self.UNKNOWN:
-                                # This technically shouldn't happen if perms respected line, but better safe than sorry.
-                                result_line[i] = line[i]
+                mask_known = current_line != self.UNKNOWN
+                result_line[mask_known] = current_line[mask_known]
 
                 return result_line
 
         def _generate_permutations(
-                self, current_line: List[int], clues: List[int], length: int
+                self, current_line: np.ndarray, clues: List[int], length: int
         ) -> List[List[int]]:
                 """
                 Generates all valid permutations of 'clues' that fit into 'current_line'.
                 Prunes branches early if they conflict with known BLACK/WHITE cells in current_line.
                 """
                 results = []
+                clues_tuple = tuple(clues)  # lighter to pass around
 
                 # Pre-calculate minimum space needed for remaining blocks
                 # e.g., clues [2, 1] needs 2 + 1 + 1 = 4 spaces minimum
@@ -152,33 +151,34 @@ class BacktrackingSolver(NonogramSolver):
                         )
 
                 def recursive_search(index, clue_idx, current_build):
-                        # 1. Base Case: All clues placed
-                        if clue_idx == len(clues):
-                                # Fill remainder with WHITE
+                        # Base Case: All clues placed
+                        if clue_idx == len(clues_tuple):
                                 remaining_len = length - index
-                                potential_tail = (
-                                        current_build + [self.WHITE] * remaining_len
-                                )
 
-                                # Verify the tail against the constraints
+                                # Verify tail against constraints
                                 # (Check if we are overwriting a known BLACK with WHITE)
                                 valid = True
+                                # Check if any remaining cell in current_line is BLACK
                                 for k in range(index, length):
                                         if current_line[k] == self.BLACK:
                                                 valid = False
                                                 break
 
                                 if valid:
-                                        results.append(potential_tail)
+                                        # Found a valid full line
+                                        results.append(
+                                                current_build
+                                                + [self.WHITE] * remaining_len
+                                        )
                                 return
 
-                        # 2. Pruning: Not enough space left
+                        # Pruning: Not enough space left
                         if index + min_space_suffix[clue_idx] > length:
                                 return
 
-                        block_size = clues[clue_idx]
+                        block_size = clues_tuple[clue_idx]
 
-                        # 3. Try placing the block at every possible start position 's'
+                        # Try placing the block at every possible start position 's'
                         # Range: from 'index' up to limit
                         # limit = length - (space needed for THIS block + space for REST) + 1
                         # min_space_suffix includes this block.
@@ -193,7 +193,6 @@ class BacktrackingSolver(NonogramSolver):
                                                 gap_ok = False
                                                 break
                                 if not gap_ok:
-                                        # If we hit a BLACK cell that we tried to make WHITE, we can't skip past it. Prune immediately.
                                         break
 
                                 # CHECK B: Can we place the BLOCK (Black)?
@@ -205,7 +204,7 @@ class BacktrackingSolver(NonogramSolver):
 
                                 # CHECK C: Mandatory Trailing Gap (White)
                                 # If not the last block, cell after block MUST be white.
-                                if clue_idx < len(clues) - 1:
+                                if clue_idx < len(clues_tuple) - 1:
                                         if (
                                                 s + block_size < length
                                                 and current_line[s + block_size]
@@ -215,8 +214,7 @@ class BacktrackingSolver(NonogramSolver):
 
                                 if block_ok:
                                         # Build segment: [Whites...] + [Blacks...] + [White (separator)]
-                                        # Note: We don't add the separator here explicitly in recursion logic to keep indices clean, but we account for it in 'next_index'.
-
+                                        # We don't add the separator here explicitly in recursion logic to keep indices clean, but we account for it in 'next_index'.
                                         new_segment = [self.WHITE] * (s - index) + [
                                                 self.BLACK
                                         ] * block_size
@@ -224,7 +222,7 @@ class BacktrackingSolver(NonogramSolver):
                                         next_index = s + block_size
 
                                         # If not last block, force a separator (implicit white)
-                                        if clue_idx < len(clues) - 1:
+                                        if clue_idx < len(clues_tuple) - 1:
                                                 new_segment.append(self.WHITE)
                                                 next_index += 1
 
@@ -237,46 +235,38 @@ class BacktrackingSolver(NonogramSolver):
                 recursive_search(0, 0, [])
                 return results
 
-        def _backtrack(self, r, c) -> bool:
+        def _backtrack(self) -> bool:
                 """
                 Recursive Backtracking step.
                 Finds the first UNKNOWN cell, guesses, and recurses.
                 """
-                # 1. Propagate Constraints first
+
+                # Propagate constraints first
                 if not self._propagate():
                         return False
 
-                # 2. Find the best cell to guess (Heuristic: First Unknown)
-                #    Could pick cell in row with most information/constraints
-                next_cell = None
-                for i in range(self.height):
-                        for j in range(self.width):
-                                if self.board[i][j] == self.UNKNOWN:
-                                        next_cell = (i, j)
-                                        break
-                        if next_cell:
-                                break
+                # Heuristic: Find first UNKNOWN cell
+                # argwhere returns coordinates of all True values
+                unknown_coords = np.argwhere(self.board == self.UNKNOWN)
 
-                # Base Case: No unknown cells left -> Solved
-                if not next_cell:
+                if unknown_coords.size == 0:
+                        return True  # Solved
+
+                # Pick the first one
+                target_r, target_c = unknown_coords[0]
+
+                # Guess BLACK
+                snapshot = self.board.copy()
+                self.board[target_r, target_c] = self.BLACK
+                if self._backtrack():
                         return True
 
-                target_r, target_c = next_cell
-
-                # 3. Guess BLACK
-                snapshot = copy.deepcopy(self.board)
-                self.board[target_r][target_c] = self.BLACK
-                if self._backtrack(target_r, target_c):
-                        return True
-
-                # 4. If BLACK failed, Restore and Guess WHITE
+                # Restore and Guess WHITE
                 self.board = snapshot
-                self.board[target_r][target_c] = self.WHITE
-                if self._backtrack(target_r, target_c):
+                self.board[target_r, target_c] = self.WHITE
+                if self._backtrack():
                         return True
 
-                # 5. Both guesses failed -> this branch is dead
-                self.board = copy.deepcopy(
-                        snapshot
-                )  # restore for clean return (optional)
+                # Fail
+                self.board = snapshot  # Clean up before returning up the stack
                 return False
