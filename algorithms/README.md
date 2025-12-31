@@ -27,6 +27,7 @@ class MySolver(NonogramSolver):
                 # self.width, self.height, self.rows, self.columns, self.grid
                 
                 # TODO: implement your algorithm by modifying self.grid
+                
                 # your logic here
                 
                 return self.grid

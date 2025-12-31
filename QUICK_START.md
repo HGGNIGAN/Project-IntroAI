@@ -1,9 +1,36 @@
 # Nonogram Solver - Quick Start Guide
 
+## Prerequisites
+
+- Python 3.8+ or PyPy (PyPy3 recommended).
+- `numpy`
+
+Installation (CPython):
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install numpy
+```
+
+Installation (PyPy):
+
+```bash
+pypy -m pip install --upgrade pip
+pypy -m pip install numpy
+# or if your system uses pypy3:
+pypy3 -m pip install numpy
+```
+
 ## Launch the Application
 
 ```bash
+# CPython
 python main.py
+
+# PyPy:
+pypy main.py
+# or if your system uses pypy3:
+pypy3 main.py
 ```
 
 The application will open with two tabs: **Configure Puzzle** and **Solution**.
@@ -11,6 +38,8 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
 ## Tab 1: Configure Puzzle
 
 ### Step 1: Set Dimensions
+
+Note: If using option A for step 2, this step can be ignored.
 
 - Use **Width** spinbox to set number of columns (1-100)
 - Use **Height** spinbox to set number of rows (1-100)

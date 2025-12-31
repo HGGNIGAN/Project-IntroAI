@@ -21,6 +21,31 @@ Current directory
 └── samples/                    # Predefined puzzle samples (.json) 
 ```
 
+### Prerequisites
+
+- Python (CPython) 3.8+ or PyPy3 (PyPy3 recommended if you prefer PyPy).
+- `numpy` is required for running the algorithms
+
+Installation (CPython):
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install numpy
+```
+
+Installation (PyPy):
+
+```bash
+pypy -m pip install --upgrade pip
+pypy -m pip install numpy
+# or if your system uses pypy3:
+pypy3 -m pip install numpy
+```
+
+Notes:
+
+- On PyPy, `numpy` is available but may be provided by a PyPy-compatible binary wheel (often named `numpy` as well). If installation fails, try installing `micronumpy` or consult PyPy documentation for platform-specific guidance.
+
 ### Running the Application
 
 ```bash
@@ -31,42 +56,37 @@ This will launch the Nonogram Solver application with a graphical interface.
 
 #### Running with PyPy
 
-- Install PyPy (PyPy3 recommended) for your platform from <https://www.pypy.org/>.
-- Then run the application with PyPy:
-
 ```bash
 pypy main.py
-```
-
-or:
-
-```bash
+# or if your system uses pypy3:
 pypy3 main.py
 ```
-
-- Notes: PyPy often improves performance for pure-Python code, but binary C extensions or platform-specific GUI bindings may be incompatible. On some platforms (especially Windows) the Tkinter GUI may not be available under PyPy; if you encounter Tkinter import errors, run the app with a CPython interpreter instead.
 
 ### Usage Guide
 
 #### Configure a Puzzle
 
-##### Configure Manually
-
-1. **Set Dimensions**: Use the spinboxes to set the puzzle width and height (1-20)
-2. **Enter Clues**:
-   - Switch to the **Rows** tab to enter row clues
-   - Switch to the **Columns** tab to enter column clues
-   - Enter clues as comma-separated numbers (e.g., `1,2,3`)
-   - Leave empty for rows/columns with no filled cells
-
 ##### Generate Random Puzzle
-
-Instead of manually entering clues:
 
 1. Set your desired **Dimensions**
 2. Click **Generate Random**:
    - Creates a random puzzle with that dimension
    - Automatically generates all row and column clues from the pattern
+
+##### Using predefined puzzles
+
+1. Select a predefined configuration inside the box
+2. Click **Load Selected**
+3. The puzzle will be loaded into the settings section and ready to be solved
+
+##### Configure Manually
+
+1. **Set Dimensions**: Use the spinboxes to set the puzzle width and height (1-100)
+2. **Enter Clues**:
+   - Switch to the **Rows** tab to enter row clues
+   - Switch to the **Columns** tab to enter column clues
+   - Enter clues as comma-separated numbers (e.g., `1,2,3`)
+   - Leave empty for rows/columns with no filled cells
 
 #### Solve
 
@@ -77,9 +97,9 @@ Instead of manually entering clues:
 
 The Solution tab displays:
 
-- **Visual Grid**: White squares (0) and black squares (1)
+- The solution grid
 - **Clue Cells**: Row clues on the left and column clues above the grid
-- **Solution Info**: Puzzle size and filled cell count
+- **Solution Info**: Puzzle size, filled cell count and the algorithm's execution time
 
 ### Configuration File Format
 
