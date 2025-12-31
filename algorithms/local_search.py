@@ -5,18 +5,18 @@ from algorithms.base import NonogramSolver
 
 
 class ImprovedLocalSearch(NonogramSolver):
-        name = "Improved Local Search (Logic + Guided)"
+        name = "Local Search"
         description = "Simulated annealing with constraint propagation and min-conflict heuristics"
 
         def __init__(
                 self,
-                max_steps=30000,  # Increased slightly as steps are more meaningful now
-                max_restarts=20,  # Decreased restarts as success rate per run is higher
+                max_steps=30000,
+                max_restarts=20,
                 temperature=3.0,
                 cooling=0.999,
                 repair_interval=60,
                 reheat_interval=2500,
-                mutation_samples=5,  # How many candidates to consider during guided mutation
+                mutation_samples=5,
         ):
                 self.max_steps = max_steps
                 self.max_restarts = max_restarts
@@ -225,23 +225,14 @@ class ImprovedLocalSearch(NonogramSolver):
                 best_p = selection_pool[0]
                 best_score = float("inf")
 
-                # We use a lightweight heuristic: just the difference in column sums.
-                # This avoids the expensive full _column_cost calculation.
-                current_p = self.row_patterns[row_idx][
-                        0
-                ]  # Dummy placeholder if needed, usually not used here logic-wise
-
+                # Heuristic: difference in column sums.
+                # Avoids the expensive full _column_cost calculation.
                 for p in selection_pool:
                         # Score = sum of how far the new column sums would be from targets
                         # We want column_sum == target.
                         score = 0
                         for c in range(self.width):
                                 # Predict new sum: current_sum - old_bit + new_bit
-                                # Note: We don't have the "old_bit" of the CURRENT state here easily accessible
-                                # without passing it in.
-                                # Optimization: We minimize abs( (current_col_sum + p[c]) - target )
-                                # assuming the row was previously empty. This is an approximation.
-                                # A better local heuristic is simply: Does this pattern put 1s where the column needs 1s?
 
                                 diff = self.column_targets[c] - current_col_sums[c]
                                 # If diff > 0, we need more 1s. If p[c] is 1, good.
@@ -281,20 +272,16 @@ class ImprovedLocalSearch(NonogramSolver):
                 return patterns
 
         def _biased_initial_state(self):
-                # Biased initialization is now much stronger because self.row_patterns
-                # is already heavily filtered by logical pruning
                 state = []
                 col_counts = [0] * self.width
                 for r in range(self.height):
-                        # Just pick random from filtered list - simpler than the old heuristic
-                        # because the list is now "smart"
+                        # Pick random from filtered list because the list is now "smart"
                         chosen = random.choice(self.row_patterns[r])
                         state.append(chosen)
                         for c in range(self.width):
                                 col_counts[c] += chosen[c]
                 return state
 
-        # Reuse existing cost methods
         def _column_cost(self, state):
                 cost = 0
                 total_filled = 0
