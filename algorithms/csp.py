@@ -1,8 +1,20 @@
 from .base import NonogramSolver
-from enum import Enum
 import copy
-from queue import Queue
 import time
+import logging
+import os
+
+proj_dir = os.path.dirname(os.path.dirname(__file__))
+log_path = os.path.join(proj_dir, "temp", "trace.log")
+
+logging.basicConfig(
+    level=logging.DEBUG,
+    filename=log_path,
+    filemode='w',
+    format="[%(levelname)s]: %(message)s"
+)
+logger = logging.getLogger(__name__)
+longbreak = "-" * 50
 
 class CSPSolver(NonogramSolver):
     name = "CSP Solver"
@@ -41,6 +53,12 @@ class CSPSolver(NonogramSolver):
             4. Remove lines that are already solved. Add the remaining ones to the tail of the queue. This is effectively how we will "solve" the puzzle.
             5. If a line is already in the queue, add additional constraints to them instead of a new queue entry.
             """
+            logger.debug("Initial board state:")
+            logger.debug(f"Size: {self.width}*{self.height}")
+            logger.debug(f"Row clues: {self.rows}")
+            logger.debug(f"Column clues: {self.columns}")
+            logger.info(longbreak)
+
             ROW = 0
             COLUMN = 1
             EMPTY = 0
@@ -76,8 +94,8 @@ class CSPSolver(NonogramSolver):
                     Only called once for each new line.\n
                     possibilty format: list[int]
                     """
-                    print(f"PERF: Generating possibilities for line type {self.type}, index {self.index}")
-                    print(f"Clues: {self.clues}")
+                    logger.info(f"Generating possibilities for line type {self.type}, index {self.index}")
+                    logger.debug(f"Clues: {self.clues}")
                     start_time = time.time()
 
                     # empty clues case; line would be empty, only 1 possibility
@@ -154,7 +172,8 @@ class CSPSolver(NonogramSolver):
                                     if not isinstance(element, list):
                                         result.append(element)
                                     else:
-                                        if len(element) == 0: continue
+                                        if len(element) == 0:
+                                            continue
                                         result.extend(flatten(element))
                                 return result
 
@@ -162,15 +181,16 @@ class CSPSolver(NonogramSolver):
 
                             self.possibilities.append(possibility)
 
-                    print(f"PERF: Generated {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
-                    print("Possibilities:")
+                    logger.debug(f"Generated {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
+                    logger.debug("Possibilities:")
                     for possibility in self.possibilities:
-                        print(f"  {possibility}")
-                    print()
+                        logger.debug(f"  {possibility}")
+                    logger.debug("")
                     return
 
                 def prune(self,
-                          constraints: list
+                          constraints: list,
+                          *prePossCount: int
                 ):
                     """
                     Remove invalid possibilities of a line based on constraints.\n
@@ -179,23 +199,25 @@ class CSPSolver(NonogramSolver):
                         - element at index 0 must be EMPTY, at index 3 must be FILLED\n
                     => constraint = [EMPTY, None, None, FILLED]
                     """
-                    print(f"PERF: Pruning line type={self.type}, index={self.index}")
+                    logger.info(f"Pruning line type={self.type}, index={self.index}")
                     start_time = time.time()
                     newPossibilities = []
                     for possibility in self.possibilities:
                         valid = True
                         for i in range(self.length):
-                            if constraints[i] is None: continue
+                            if constraints[i] is None:
+                                continue
                             elif possibility[i] != constraints[i]:
                                 valid = False
                                 break
-                        if valid: newPossibilities.append(possibility)
+                        if valid:
+                            newPossibilities.append(possibility)
                     self.possibilities = newPossibilities
 
-                    print(f"PERF: Pruned to {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
+                    logger.debug(f"Pruned from {prePossCount[0] if prePossCount else "x"} to {len(self.possibilities)} possibilities in {time.time() - start_time:.4f}s")
                     for possibility in self.possibilities:
-                        print(f"  {possibility}")
-                    print()
+                        logger.debug(f"  {possibility}")
+                    logger.info("")
 
                 def perpendicular(self,
                     lines: dict,
@@ -203,25 +225,26 @@ class CSPSolver(NonogramSolver):
                     """
                     Returns list of propagated perpendicular lines (list[processingEntry])
                     """
-                    print(f"PERF: Finding propagating perpendicular lines of line type={self.type}, index={self.index}")
+                    logger.info(f"Finding propagating perpendicular lines of line type={self.type}, index={self.index}")
                     start_time = time.time()
                     # I don't think a line can have 0 possibilities, but just in case
                     if not self.possibilities:
-                        print("ERROR: Line has 0 possibility! Skipping perpendicular check...")
+                        logger.error("Line has 0 possibility! Skipping perpendicular check...")
                         return
 
+                    # TODO: is this even correct?
                     # finds bits that stay the same in remaining possibilities
                     perpLines = []
                     checker = copy.deepcopy(self.possibilities[0])
 
-                    if len(self.possibilities) > 2:
+                    if len(self.possibilities) >= 2:
                         for possibility in self.possibilities[1:]:
 
                             for i in range(len(checker)):
                                 if checker[i] == possibility[i]:
                                     continue # FILLED==FILLED or EMPTY==EMPTY
                                 checker[i] = None
-                    print(f"Checker: {checker}")
+                    logger.debug(f"Checker: {checker}")
 
                     # find possible processing queue entries
                     key = "columns" if self.type == ROW else "rows"
@@ -237,25 +260,26 @@ class CSPSolver(NonogramSolver):
                             newEntry = processingEntry(perpLine, constraint)
                             perpLines.append(newEntry)
 
-                    print(f"PERF: Found {len(perpLines)} propagating perpendicular lines in {time.time() - start_time:.4f}s")
+                    logger.debug(f"Found {len(perpLines)} propagating perpendicular lines in {time.time() - start_time:.4f}s")
                     for entry in perpLines:
                         entry.printEntry()
 
                     # from candidate lines,
                     # if line solved, don't add to queue at all
                     # if line alr in queue, merge entry, else put entry to queue
+                    logger.info("Merging/adding entries to processingQueue...")
                     for entry in perpLines:
                         alreadyInQueue = False
                         for existingEntry in processingQueue: # this for loop is the entire reason why processingQueue uses a list lol
                             if entry.line == existingEntry.line:
-                                print(f"PERF: Merging constraint for line type={entry.line.type}, index={entry.line.index}")
+                                logger.debug(f"Merging constraint for line type={entry.line.type}, index={entry.line.index}")
                                 existingEntry.mergeEntry(entry)
                                 alreadyInQueue = True
                                 break
                         if not alreadyInQueue:
-                            print(f"PERF: Adding line type={entry.line.type}, index={entry.line.index} to queue")
+                            logger.debug(f"Adding line type={entry.line.type}, index={entry.line.index} to queue")
                             processingQueue.append(entry)
-                    print()
+                    logger.info("")
 
                     # return perpLines
 
@@ -286,29 +310,57 @@ class CSPSolver(NonogramSolver):
                 newColumn.generatePossibilities()
                 C.append(newColumn)
 
-            # greedy ordering + queue to determine what to process next
+            # greedy ordering (in terms of possibilities count per line) + queue to determine what to process next
             greedyOrdering = []
+
+            logger.info("Soring rows and columns by greedy order (lines with fewer possibilities get preprocessed earlier)")
+            def greedyEntrySort(
+                entries: list,
+                entryType: int,
+            ):
+                entryTypeStr = "rows" if entryType == ROW else "columns"
+                logger.info(f"Sorting {entryTypeStr} with builtin sort() method")
+                count = self.height if entryType == ROW else self.width
+                lines = R if entryType == ROW else C
+                for ptr in range(count):
+                    entries.append((entryType, ptr))
+                entries.sort(key=lambda entry: len(lines[entry[1]].possibilities))
+                logger.debug(f"Sorted {entryTypeStr}: {entries}")
+                return entries
+            entriesR = greedyEntrySort([], ROW)
+            entriesC = greedyEntrySort([], COLUMN)
+
+            logger.debug("")
+            logger.debug("Using double pointer method to append both entries lists to greedyOrdering...")
             ptrR, ptrC = 0, 0
-            while ptrR < self.height and ptrC < self.width:
-                possCountR, possCountC = len(R[ptrR].possibilities), len(C[ptrC].possibilities)
+            while ptrR < len(entriesR) and ptrC < len(entriesC):
+                idxR, idxC = entriesR[ptrR][1], entriesC[ptrC][1]
+                possCountR, possCountC = len(R[idxR].possibilities), len(C[idxC].possibilities)
                 if possCountR <= possCountC:
-                    entryType, entryIndex = ROW, ptrR
-                    greedyOrdering.append((entryType, entryIndex))
+                    logger.debug(f"Appending row {idxR} with {possCountR} possibilities to greedyOrdering")
+                    greedyOrdering.append(entriesR[ptrR])
                     ptrR += 1
                 else:
-                    entryType, entryIndex = COLUMN, ptrC
-                    greedyOrdering.append((entryType, entryIndex))
+                    logger.debug(f"Appending column {idxC} with {possCountC} possibilities to greedyOrdering")
+                    greedyOrdering.append(entriesC[ptrC])
                     ptrC += 1
-            # TODO: figure out how to order the remaining lines in a greedy manner instead of just lazily slapping them on
-            if ptrC < self.width:
-                while ptrC < self.width:
-                    greedyOrdering.append((COLUMN, ptrC))
-                    ptrC += 1
+            if ptrR < len(entriesR):
+                logger.debug("There are remaining rows; appending to greedyOrdering")
+                ptr = ptrR
+                entries = entriesR
             else:
-                while ptrR < self.height:
-                    greedyOrdering.append((ROW, ptrR))
-                    ptrR += 1
+                logger.debug("There are remaining columns; appending to greedyOrdering")
+                ptr = ptrC
+                entries = entriesC
+            while ptr < len(entries):
+                entryTypeStr = "row" if entries[ptr][0] == ROW else "column"
+                logger.debug(f"Appending {entryTypeStr} {entries[ptr][1]} to greedyOrdering")
+                greedyOrdering.append(entries[ptr])
+                ptr += 1
+
             greedyOrdering = tuple(greedyOrdering)
+            logger.debug(f"greedyOrdering: {greedyOrdering}")
+            logger.debug("")
 
             class processingEntry():
                 def __init__(self,
@@ -324,87 +376,89 @@ class CSPSolver(NonogramSolver):
                         # assumptions: the 2 constraints don't have overlaps in each element
                         mergedConstraint = []
                         for thisBit, thatBit in zip(self.constraint, other.constraint):
-                            if thisBit in (FILLED, EMPTY): mergedConstraint.append(thisBit)
-                            elif thatBit in (FILLED, EMPTY): mergedConstraint.append(thatBit)
-                            else: mergedConstraint.append(None)
+                            if thisBit in (FILLED, EMPTY):
+                                mergedConstraint.append(thisBit)
+                            elif thatBit in (FILLED, EMPTY):
+                                mergedConstraint.append(thatBit)
+                            else:
+                                mergedConstraint.append(None)
                         self.constraint = mergedConstraint
 
                 def printEntry(self):
-                    print(f"Entry type={self.line.type}, index={self.line.index}")
-                    print(f"Constraints: {self.constraint}")
+                    logger.debug(f"Entry type={self.line.type}, index={self.line.index}")
+                    logger.debug(f"Constraints: {self.constraint}")
 
             processingQueue: list[processingEntry] = [] # effectively a queue, with pop(0) and append()
             def printQueue(processingQueue: list[processingEntry]):
-                print("Processing Queue:")
+                logger.debug("Processing Queue:")
                 for entry in processingQueue:
-                    print("**")
-                    print(f"Entry type={entry.line.type}, index={entry.line.index}")
-                    print(f"Constraint: {entry.constraint}")
-                print()
+                    logger.debug("**")
+                    logger.debug(f"Entry type={entry.line.type}, index={entry.line.index}")
+                    logger.debug(f"Constraint: {entry.constraint}")
+                logger.debug("")
 
 
-            print("PREPROCESSING")
-            print("---------------------------------------------")
+            logger.info("PREPROCESSING")
+            logger.info(longbreak)
             for (entryType, entryIndex) in greedyOrdering:
                 key = "columns" if entryType == COLUMN else "rows"
                 initLine: line = lines[key][entryIndex]
                 initLine.perpendicular(lines, processingQueue)
-            print()
-            # print("processingQueue preload: ")
-            # printQueue(processingQueue)
+            logger.info("")
+            logger.debug("processingQueue preload:")
+            printQueue(processingQueue)
 
             # regular workflow to induce propagation
-            print("START PROCESSING")
-            print("---------------------------------------------")
+            logger.info("START PROCESSING")
+            logger.info(longbreak)
             while len(processingQueue) > 0:
                 currEntry: processingEntry = processingQueue.pop(0)
                 currLine: line = currEntry.line
                 currConstraint: list = currEntry.constraint
 
-                # TODO: You can't skip the starting lines!!! If they're already solved from the get-go, they can propagate!
                 if len(currLine.possibilities) <= 1:
-                    print(f"PERF: Skipping already solved line type={currLine.type}, index={currLine.index}")
-                    print("---------------------------------------------")
+                    logger.info(f"Skipping already solved line type={currLine.type}, index={currLine.index}")
+                    logger.info(longbreak)
                     continue
 
-                print(f"PERF: Processing line type={currLine.type}, index={currLine.index}")
+                logger.info(f"Processing line type={currLine.type}, index={currLine.index}")
+                logger.debug(f"Constraint: {currConstraint}")
 
                 # in case prune() doesn't prune anything
                 prePossCount = len(currLine.possibilities)
 
                 # remove invalid possibilities based on constraint
-                currLine.prune(currConstraint)
+                currLine.prune(currConstraint, prePossCount)
 
                 if len(currLine.possibilities) == prePossCount:
-                    print("PERF: Line's possibilities unpruned")
+                    logger.debug("Line's possibilities unpruned")
 
                 currLine.perpendicular(lines, processingQueue)
 
-                print()
-                print("---------------------------------------------")
+                logger.info(longbreak)
             # by this point in the program, all lines should only have 1 possibility: their solution
 
-            print("Creating solution....")
+            logger.info("Creating solution....")
             solution = []
             for i, row in enumerate(R):
                 if len(row.possibilities) == 0:
-                    print(f"ERROR: Row {i} has no possibilities!")
-                    # Return None or some default value instead of crashing
-                    return None
-                print(f"DEBUG: Row {i}: {row.possibilities[0]}")
-                solution.append(row.possibilities[0])
+                    logger.error(f"Row {i} has no possibilities!")
+                elif len(row.possibilities) > 1:
+                    logger.error(f"Row {i} has {len(row.possibilities)} possibilities! You may need some backtracking as fallback.")
+                else:
+                    logger.debug(f"Row {i}: {row.possibilities[0]}")
+                    solution.append(row.possibilities[0])
 
             # don't forget to do this lol
-            print("DEBUG: Setting self.grid...")
+            logger.info("Setting self.grid...")
             self.grid = solution
-            print("DEBUG: Returning self.grid...")
+            logger.info("Returning self.grid...")
             return self.grid
 
         except Exception as e:
-            import traceback
-            print(f"Exception occurred: {type(e).__name__}: {e}")
-            print("Full traceback:")
-            traceback.print_exc()
-            raise
+            logger.exception(f"Exception occurred: {type(e).__name__}: {e}")
+            # logger.exception("Full traceback:")
+            # traceback.print_exc()
+            # raise
 
 
