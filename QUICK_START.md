@@ -1,9 +1,36 @@
 # Nonogram Solver - Quick Start Guide
 
+## Prerequisites
+
+- Python 3.8+ or PyPy (PyPy3 recommended).
+- `numpy`
+
+Installation (CPython):
+
+```bash
+python -m pip install --upgrade pip
+python -m pip install numpy
+```
+
+Installation (PyPy):
+
+```bash
+pypy -m pip install --upgrade pip
+pypy -m pip install numpy
+# or if your system uses pypy3:
+pypy3 -m pip install numpy
+```
+
 ## Launch the Application
 
 ```bash
+# CPython
 python main.py
+
+# PyPy:
+pypy main.py
+# or if your system uses pypy3:
+pypy3 main.py
 ```
 
 The application will open with two tabs: **Configure Puzzle** and **Solution**.
@@ -12,12 +39,14 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
 
 ### Step 1: Set Dimensions
 
-- Use **Width** spinbox to set number of columns (1-20)
-- Use **Height** spinbox to set number of rows (1-20)
+Note: If using option A for step 2, this step can be ignored.
+
+- Use **Width** spinbox to set number of columns (1-100)
+- Use **Height** spinbox to set number of rows (1-100)
 
 ### Step 2: Generate Puzzle or Enter Clues
 
-**Option A: Generate Random Puzzle** (Recommended)
+**Option A: Generate Random Puzzle**
 
 1. Click **Generate Random**
 2. A random puzzle will be created automatically:
@@ -25,7 +54,13 @@ The application will open with two tabs: **Configure Puzzle** and **Solution**.
    - Grid is printed to terminal
    - Config is updated
 
-**Option B: Enter Clues Manually**
+**Option B: Import Predefined Puzzles**
+
+1. Select the puzzle inside the selection box next to the random generator button
+2. Click **Load Selected**
+3. The puzzle will be loaded into the settings section and ready to be solved
+
+**Option C: Enter Clues Manually**
 
 The **Row/Column Clues** section has two tabs:
 
