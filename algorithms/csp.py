@@ -206,7 +206,9 @@ class CSPSolver(NonogramSolver):
                     print(f"PERF: Finding propagating perpendicular lines of line type={self.type}, index={self.index}")
                     start_time = time.time()
                     # I don't think a line can have 0 possibilities, but just in case
-                    if not self.possibilities: return []
+                    if not self.possibilities:
+                        print("ERROR: Line has 0 possibility! Skipping perpendicular check...")
+                        return
 
                     # finds bits that stay the same in remaining possibilities
                     perpLines = []
@@ -238,8 +240,24 @@ class CSPSolver(NonogramSolver):
                     print(f"PERF: Found {len(perpLines)} propagating perpendicular lines in {time.time() - start_time:.4f}s")
                     for entry in perpLines:
                         entry.printEntry()
+
+                    # from candidate lines,
+                    # if line solved, don't add to queue at all
+                    # if line alr in queue, merge entry, else put entry to queue
+                    for entry in perpLines:
+                        alreadyInQueue = False
+                        for existingEntry in processingQueue: # this for loop is the entire reason why processingQueue uses a list lol
+                            if entry.line == existingEntry.line:
+                                print(f"PERF: Merging constraint for line type={entry.line.type}, index={entry.line.index}")
+                                existingEntry.mergeEntry(entry)
+                                alreadyInQueue = True
+                                break
+                        if not alreadyInQueue:
+                            print(f"PERF: Adding line type={entry.line.type}, index={entry.line.index} to queue")
+                            processingQueue.append(entry)
                     print()
-                    return perpLines
+
+                    # return perpLines
 
             # main solution!
 
@@ -324,16 +342,14 @@ class CSPSolver(NonogramSolver):
                     print(f"Constraint: {entry.constraint}")
                 print()
 
-            # TODO: implement special processing for these first lines; don't prune, just find perpendicular lines from them
-            # instead of adding them to processing queue with no constraint
-            for (entryType, entryIndex) in greedyOrdering:
-                constraintLength = self.width if entryType == ROW else self.height
-                nextLine = R[entryIndex] if entryType == ROW else C[entryIndex]
-                processingQueue.append(
-                    processingEntry(nextLine,
-                                    [None for _ in range(constraintLength)]
-                ))
 
+            print("PREPROCESSING")
+            print("---------------------------------------------")
+            for (entryType, entryIndex) in greedyOrdering:
+                key = "columns" if entryType == COLUMN else "rows"
+                initLine: line = lines[key][entryIndex]
+                initLine.perpendicular(lines, processingQueue)
+            print()
             # print("processingQueue preload: ")
             # printQueue(processingQueue)
 
@@ -362,22 +378,8 @@ class CSPSolver(NonogramSolver):
                 if len(currLine.possibilities) == prePossCount:
                     print("PERF: Line's possibilities unpruned")
 
-                perpLines: list[processingEntry] = []
-                # from the remaining possibilities, find propagated perpendicular lines
-                perpLines = currLine.perpendicular(lines, processingQueue)
-                # if line solved, don't add to queue at all
-                # if line alr in queue, merge entry, else put entry to queue
-                for entry in perpLines:
-                    alreadyInQueue = False
-                    for existingEntry in processingQueue: # this for loop is the entire reason why processingQueue uses a list lol
-                        if entry.line == existingEntry.line:
-                            print(f"PERF: Merging constraint for line type={entry.line.type}, index={entry.line.index}")
-                            existingEntry.mergeEntry(entry)
-                            alreadyInQueue = True
-                            break
-                    if not alreadyInQueue:
-                        print(f"PERF: Adding line type={entry.line.type}, index={entry.line.type} to queue")
-                        processingQueue.append(entry)
+                currLine.perpendicular(lines, processingQueue)
+
                 print()
                 print("---------------------------------------------")
             # by this point in the program, all lines should only have 1 possibility: their solution
