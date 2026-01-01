@@ -8,7 +8,8 @@ proj_dir = os.path.dirname(os.path.dirname(__file__))
 log_path = os.path.join(proj_dir, "temp", "trace.log")
 
 logging.basicConfig(
-    level=logging.DEBUG,
+    # CHANGE THIS TO A HIGHER LEVEL IF NOT DEBUGGING
+    level=logging.INFO,
     filename=log_path,
     filemode='w',
     format="[%(levelname)s]: %(message)s"
@@ -18,41 +19,44 @@ longbreak = "-" * 50
 
 class CSPSolver(NonogramSolver):
     name = "CSP Solver"
-    description = "Solver modeling the puzzle as a Constrained Satisfaction Problem."
+    description = "Solver modeling the puzzle as a Constrained Satisfaction Problem. Only partially complete, by design."
 
     def _solve_internal(self):
+        """
+        Constraint Satisfaction Problem (CSP) solver for nonogram puzzles.
+
+        This algorithm models the nonogram as a CSP where each row and column is a constraint
+        that must be satisfied. It uses constraint propagation to systematically eliminate
+        invalid possibilities without backtracking.
+
+        Algorithm Overview:
+        1. Generate all valid possibilities for each row/column constraint
+        2. Apply greedy heuristic ordering (process lines with fewer possibilities first)
+        3. Use constraint propagation to eliminate invalid possibilities:
+           - When a cell is determined in one line, propagate to perpendicular lines
+           - Remove possibilities that conflict with known cell values
+        4. Repeat until no more deductions can be made
+
+        Key Features:
+        - Pure constraint propagation (no backtracking fallback)
+        - Bidirectional constraint enforcement (rows ↔ columns)
+        - Greedy constraint ordering for efficiency
+        - Intersection-based deduction (cells that are the same across all possibilities)
+
+        Limitations:
+        - May fail to solve puzzles requiring search/backtracking
+        - Returns incorrect results if constraint propagation is insufficient
+        - Considered "partially complete" by design
+
+        Time Complexity: O(m × n × P) where P is average possibilities per constraint
+        Space Complexity: O(m × n × P) for storing all possibilities
+
+        Returns:
+            list[list[int]]: 2D grid solution (1=filled, 0=empty), or None if failed
+        """
         try:
             # Instance variables are ready to use:
             # self.width, self.height, self.rows, self.columns, self.grid
-            """
-
-            *\n
-            Models a nonogram puzzle as a Constraint Satisfaction Problem.\n
-            Call each row/column a line.\n
-            With each line's clues, generate all possibilities for it.\n
-            As more constraints are declared, they wiil propagate to numerous lines and reduce the possiblities, eventually leaving behind the solution.\n
-
-            *\n
-            Sort the lines by number of possibilities, increasing.\n
-            This will be our greedy heuristics to check which lines need to be checked and created constraints out of first.\n
-            Call this the "priority" of checking lines.\n
-
-            *\n
-            A queue of lines to check next should be created.\n
-            When we check each line, they need to have additional constraints, for possibilities elimination; a dict works great for this.\n
-            On initialization of it, add all rows and columns to the queue, with no additional constraint.\n
-            Pop the head of the queue when looking for the next line to check.\n
-
-            *\n
-            When checking a line:\n
-            1. From clues + additional constraints, remove all invalid possibilities.
-            2. From the remaining possibilities, identify which bits (1 OR 0) are the same across all of them.
-                These bits act as additional constraints (because they MUST stay the same).
-                Each of them identifies a cell on the nonogram puzzle, and we consider the perpendicular line to our current line, at that cell.
-            3. List all perpendicular lines that needs additional constraints added to them, by priority.
-            4. Remove lines that are already solved. Add the remaining ones to the tail of the queue. This is effectively how we will "solve" the puzzle.
-            5. If a line is already in the queue, add additional constraints to them instead of a new queue entry.
-            """
             logger.debug("Initial board state:")
             logger.debug(f"Size: {self.width}*{self.height}")
             logger.debug(f"Row clues: {self.rows}")
