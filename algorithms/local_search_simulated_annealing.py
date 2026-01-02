@@ -4,8 +4,8 @@ import random
 from algorithms.__base__ import NonogramSolver
 
 
-class LocalSearchSolver(NonogramSolver):
-        name = "Local Search"
+class SimulatedAnnealingSolver(NonogramSolver):
+        name = "Local Search with Simulated Annealing"
         description = "Simulated annealing with constraint propagation and min-conflict heuristics"
 
         def __init__(
