@@ -4,7 +4,7 @@ A graphical user interface for configuring and solving nonogram puzzles.
 
 ### Project Structure
 
-```
+```tree
 Current directory
 ├── README.md                   # This file
 ├── QUICK_START.md              # Quick start guide
@@ -21,7 +21,7 @@ Current directory
 
 ### Prerequisites
 
-- Python (CPython) 3.8+ or PyPy3 for runtime boost (PyPy3 recommended if you prefer PyPy).
+- Python (CPython) 3.8+ or PyPy for runtime boost (PyPy3 recommended if you prefer PyPy).
 - `numpy` is required for running the algorithms
 
 Installation (CPython):
