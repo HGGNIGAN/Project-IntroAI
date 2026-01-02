@@ -11,19 +11,17 @@ Current directory
 │
 ├── main.py                     # Entry point
 ├── algorithms/                 # Algorithm implementations
+│   ├── __init__.py             # Grabs all implemented algorithms
+│   ├── __base__.py             # Abstract class for solution implementations
+│   └── (implementations)
 ├── core/                       # Core business logic
-│   ├── config_manager.py       # Configuration management (save/load)
-│   └── puzzle_generator.py     # Random puzzle generation
 ├── ui/                         # User interface components
-│   ├── app.py                  # Main application window
-│   ├── configurator.py         # Puzzle configuration UI
-│   └── display_nonogram.py     # Grid display functionality
 └── samples/                    # Predefined puzzle samples (.json) 
 ```
 
 ### Prerequisites
 
-- Python (CPython) 3.8+ or PyPy3 (PyPy3 recommended if you prefer PyPy).
+- Python (CPython) 3.8+ or PyPy3 for runtime boost (PyPy3 recommended if you prefer PyPy).
 - `numpy` is required for running the algorithms
 
 Installation (CPython):
@@ -68,7 +66,7 @@ pypy3 main.py
 
 ##### Generate Random Puzzle
 
-1. Set your desired **Dimensions**
+1. Set your desired dimensions
 2. Click **Generate Random**:
    - Creates a random puzzle with that dimension
    - Automatically generates all row and column clues from the pattern
@@ -97,7 +95,7 @@ pypy3 main.py
 
 The Solution tab displays:
 
-- The solution grid
+- **The solution grid**
 - **Clue Cells**: Row clues on the left and column clues above the grid
 - **Solution Info**: Puzzle size, filled cell count and the algorithm's execution time
 
@@ -146,12 +144,3 @@ Example:
 - `1,2,3` = blocks of 1, 2, and 3 filled cells separated by at least one empty cell
 - `5` = a single block of 5 filled cells
 - Empty = no filled cells in this row/column
-
-### Developer Notes
-
-- **Directory Organization**:
-  - **core/** contains business logic (`ConfigManager`, `PuzzleGenerator`)
-  - **ui/** contains only UI components (TKinter-based interface)
-  - **algorithms/** contains puzzle solver implementations
-  
-- **Adding Solvers**: Read [algorithms/README.md](algorithms/README.md) before adding or modifying solvers
