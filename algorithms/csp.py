@@ -199,10 +199,9 @@ class line:
                 for entry in perpLines:
                         entry.printEntry()
 
-                # from candidate lines,
+                # from candidate lines:
                 # if line solved, don't add to queue at all
                 # if line alr in queue, merge entry, else put entry to queue
-
                 for entry in perpLines:
                         alreadyInQueue = False
                         for existingEntry in processingQueue:  # this for loop is the entire reason why processingQueue uses a list lol
@@ -258,11 +257,6 @@ class CSPSolver(NonogramSolver):
                     list[list[int]]: 2D grid solution (1=filled, 0=empty), or None if failed
                 """
                 try:
-                        # Instance variables are ready to use:
-                        # self.width, self.height, self.rows, self.columns, self.grid
-
-                        # main solution!
-
                         # formats the puzzle into rows and columns
                         lines = {"rows": [], "columns": []}
                         R, C = lines["rows"], lines["columns"]
@@ -346,7 +340,6 @@ class CSPSolver(NonogramSolver):
                         printQueue(processingQueue)
 
                         # regular workflow to induce propagation
-
                         while len(processingQueue) > 0:
                                 currEntry: processingEntry = processingQueue.pop(0)
                                 currLine: line = currEntry.line
@@ -367,7 +360,6 @@ class CSPSolver(NonogramSolver):
                                 currLine.perpendicular(lines, processingQueue)
 
                         # by this point in the program, all lines should only have 1 possibility: their solution
-
                         solution = []
                         for i, row in enumerate(R):
                                 if len(row.possibilities) == 0:
