@@ -157,7 +157,7 @@ class GreedyBestFirstSolver(NonogramSolver):
                 deterministic_indices = np.where(mins == maxs)[0]
 
                 # Zip the index with the value (we can take from mins or maxs)
-                if len(deterministic_indices) > 0:
+                if len(deterministic_indices):
                         return list(
                                 zip(deterministic_indices, mins[deterministic_indices])
                         )
@@ -181,7 +181,7 @@ class GreedyBestFirstSolver(NonogramSolver):
                                         state.rows_possible[i]
                                 )
                                 for j, val in cells:
-                                        if state.board[i][j] == 0:
+                                        if not state.board[i][j]:
                                                 state.board[i][j] = val
                                                 state.cols_possible[j] = (
                                                         self._remove_possibilities(
@@ -203,7 +203,7 @@ class GreedyBestFirstSolver(NonogramSolver):
                                         state.cols_possible[j]
                                 )
                                 for i, val in cells:
-                                        if state.board[i][j] == 0:
+                                        if not state.board[i][j]:
                                                 state.board[i][j] = val
                                                 state.rows_possible[i] = (
                                                         self._remove_possibilities(
@@ -223,7 +223,7 @@ class GreedyBestFirstSolver(NonogramSolver):
 
                 for i in range(state.m):
                         for j in range(state.n):
-                                if state.board[i][j] == 0:
+                                if not state.board[i][j]:
                                         row_vals = np.unique(
                                                 state.rows_possible[i][:, j]
                                         )

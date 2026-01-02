@@ -239,7 +239,7 @@ class processingEntry:
                 pass
 
 
-class CSPSolver(NonogramSolver):
+class ConstraintProgrammingSolver(NonogramSolver):
         name = "CSP Solver"
         description = (
                 "Solver modeling the puzzle as a Constrained Satisfaction Problem."
