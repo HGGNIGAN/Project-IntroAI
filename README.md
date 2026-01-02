@@ -21,7 +21,7 @@ Current directory
 
 ### Prerequisites
 
-- Python (CPython) 3.8+ or PyPy3 (PyPy3 recommended if you prefer PyPy).
+- Python (CPython) 3.8+ or PyPy3 for runtime boost (PyPy3 recommended if you prefer PyPy).
 - `numpy` is required for running the algorithms
 
 Installation (CPython):
