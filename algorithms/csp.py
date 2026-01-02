@@ -1,7 +1,7 @@
 from functools import lru_cache
 from typing import Dict, List, Tuple
 
-from .base import NonogramSolver
+from .__base__ import NonogramSolver
 
 ROW = 0
 COLUMN = 1
@@ -127,7 +127,7 @@ class line:
         def __eq__(self, other):
                 return self.type == other.type and self.index == other.index
 
-        def generatePossibilities(self):
+        def generate_possibilities(self):
                 """
                 Only called once for each new line.\n
                 Returns the list of all possible configurations for this line based on its clues.
@@ -173,7 +173,7 @@ class line:
                 # TODO: is this even correct?
                 # finds bits that stay the same in remaining possibilities
                 perpLines = []
-                checker = self.possibilities[0][:]  # shallow copy is sufficient
+                checker = self.possibilities[0][:]
 
                 if len(self.possibilities) >= 2:
                         for possibility in self.possibilities[1:]:
@@ -267,7 +267,7 @@ class CSPSolver(NonogramSolver):
                                         index=i,
                                         clues=self.rows[i],
                                 )
-                                newRow.generatePossibilities()
+                                newRow.generate_possibilities()
                                 R.append(newRow)
                         for i in range(self.width):
                                 newColumn = line(
@@ -276,7 +276,7 @@ class CSPSolver(NonogramSolver):
                                         index=i,
                                         clues=self.columns[i],
                                 )
-                                newColumn.generatePossibilities()
+                                newColumn.generate_possibilities()
                                 C.append(newColumn)
 
                         # greedy ordering (in terms of possibilities count per line) + queue to determine what to process next

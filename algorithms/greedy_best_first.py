@@ -3,7 +3,7 @@ from itertools import combinations
 
 import numpy as np
 
-from .base import NonogramSolver
+from .__base__ import NonogramSolver
 
 
 class NonogramState:

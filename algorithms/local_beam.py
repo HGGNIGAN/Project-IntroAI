@@ -2,7 +2,7 @@ import heapq
 import random
 from typing import List, Tuple
 
-from .base import NonogramSolver
+from .__base__ import NonogramSolver
 
 
 class BeamState:
