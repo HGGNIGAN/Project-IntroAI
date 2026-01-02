@@ -5,7 +5,7 @@ import inspect
 import pkgutil
 from pathlib import Path
 
-from .base import NonogramSolver
+from .__base__ import NonogramSolver
 
 
 def discover_solvers():

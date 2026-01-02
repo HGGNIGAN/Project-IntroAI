@@ -2,12 +2,12 @@ from typing import List, Optional
 
 import numpy as np
 
-from .base import NonogramSolver
+from .__base__ import NonogramSolver
 
 
 class BacktrackingSolver(NonogramSolver):
         """
-        Advanced solver implementing Chronological Backtracking with Logical Rule filters.
+        Chronological Backtracking with Logical Rule filters.
 
         This solver uses a 'Propagate & Backtrack' strategy:
         1. Propagation: Repeatedly applies logical deduction (Line Intersection) to all rows and columns until no new information can be found.

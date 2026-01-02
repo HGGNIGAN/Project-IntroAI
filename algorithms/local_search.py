@@ -1,10 +1,10 @@
 import math
 import random
 
-from algorithms.base import NonogramSolver
+from algorithms.__base__ import NonogramSolver
 
 
-class ImprovedLocalSearch(NonogramSolver):
+class LocalSearchSolver(NonogramSolver):
         name = "Local Search"
         description = "Simulated annealing with constraint propagation and min-conflict heuristics"
 
